@@ -2,6 +2,8 @@ android/build/*
 
 *.so
 
-android/libs/armeabi-v7a/libfacebook.so
+android/libs/*
 
 android/dist/facebook.jar
+
+
