@@ -14,6 +14,23 @@
  * limitations under the License.
  */
 
+/**
+ * MODIFICATIONS
+ *
+ * Facebook Module
+ * Copyright (c) 2009-2013 by Appcelerator, Inc. All Rights Reserved.
+ * Please see the LICENSE included with this distribution for details.
+ */
+
+/**
+ * NOTES
+ * Modifications made for Titanium:
+ * - In isLoggingBehaviorEnabled(), use Utility.getLogEnabled() instead of BuildConfig.DEBUG.
+ *
+ * Original file this is based on:
+ * https://github.com/facebook/facebook-android-sdk/blob/4e2e6b90fbc964ca51a81e83e802bb4a62711a78/facebook/src/com/facebook/Settings.java
+ */
+
 package com.facebook;
 
 import android.content.ContentResolver;
@@ -407,9 +424,11 @@ public final class Settings {
                 return publishResponse;
             }
         } catch (Exception e) {
-            // if there was an error, fall through to the failure case.
-            Utility.logd("Facebook-publish", e);
-            return new Response(null, null, new FacebookRequestError(null, e));
+            if (e.getMessage() != null && !e.getMessage().isEmpty()) {
+                // if there was an error, fall through to the failure case.
+                Utility.logd("Facebook-publish", e.getMessage());
+                return new Response(null, null, new FacebookRequestError(null, e));
+            }
         }
     }
 
