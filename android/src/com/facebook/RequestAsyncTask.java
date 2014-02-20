@@ -1,5 +1,5 @@
 /**
- * Copyright 2012 Facebook
+ * Copyright 2010-present Facebook.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,26 +14,9 @@
  * limitations under the License.
  */
 
-/**
- * MODIFICATIONS
- * 
- * Facebook Module
- * Copyright (c) 2009-2013 by Appcelerator, Inc. All Rights Reserved.
- * Please see the LICENSE included with this distribution for details.
- */
-
-/**
- * NOTES
- * Modifications made for Titanium:
- * - Don't use android.annotation.TargetApi since it is only for API 16+.
- * 
- * Original file this is based on:
- * https://github.com/facebook/facebook-android-sdk/blob/4e2e6b90fbc964ca51a81e83e802bb4a62711a78/facebook/src/com/facebook/RequestAsyncTask.java
- */
-
 package com.facebook;
 
-//import android.annotation.TargetApi; //TTIANIUM
+import android.annotation.TargetApi;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.util.Log;
@@ -49,9 +32,7 @@ import java.util.concurrent.Executor;
  * Defines an AsyncTask suitable for executing a Request in the background. May be subclassed
  * by applications having unique threading model needs.
  */
-// *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-// Comment out @TargetApi since it is only for API 16+.
-//@TargetApi(3)
+@TargetApi(3)
 public class RequestAsyncTask extends AsyncTask<Void, Void, List<Response>> {
     private static final String TAG = RequestAsyncTask.class.getCanonicalName();
     private static Method executeOnExecutorMethod;

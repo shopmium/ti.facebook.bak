@@ -1,5 +1,5 @@
 /**
- * Copyright 2012 Facebook
+ * Copyright 2010-present Facebook.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,26 +14,9 @@
  * limitations under the License.
  */
 
-/**
- * MODIFICATIONS
- * 
- * Facebook Module
- * Copyright (c) 2009-2013 by Appcelerator, Inc. All Rights Reserved.
- * Please see the LICENSE included with this distribution for details.
- */
-
-/**
- * NOTES
- * Modifications made for Titanium:
- * - Don't use android.annotation.SuppressLint since it is only for API 16+.
- * 
- * Original file this is based on:
- * https://github.com/facebook/facebook-android-sdk/blob/4e2e6b90fbc964ca51a81e83e802bb4a62711a78/facebook/src/com/facebook/model/JsonUtil.java
- */
-
 package com.facebook.model;
 
-//import android.annotation.SuppressLint; //TITANIUM
+import android.annotation.SuppressLint;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -70,9 +53,7 @@ class JsonUtil {
             this.value = value;
         }
 
-        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-        // Comment out @SuppressLint since it is only for API 16+.
-        //@SuppressLint("FieldGetter")
+        @SuppressLint("FieldGetter")
         @Override
         public String getKey() {
             return this.key;

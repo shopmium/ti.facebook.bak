@@ -14,27 +14,6 @@
  * limitations under the License.
  */
 
-/**
- * MODIFICATIONS
- * 
- * Facebook Module
- * Copyright (c) 2009-2013 by Appcelerator, Inc. All Rights Reserved.
- * Please see the LICENSE included with this distribution for details.
- */
-
-/**
- * NOTES
- * Modifications made for Titanium:
- * - In openUrl(String, String, Bundle), add 
- * 		conn.setUseCaches(false);
- * 	 to avoid our Http cache
- * - In parseJson(String), provide the error code when throwing an error.
- * - Add setLogEnabled() which can enable/disable log messages.
- * 
- * Original file this is based on:
- * https://github.com/facebook/facebook-android-sdk/blob/4e2e6b90fbc964ca51a81e83e802bb4a62711a78/facebook/src/com/facebook/android/Util.java
- */
-
 package com.facebook.android;
 
 import android.app.AlertDialog.Builder;
@@ -186,7 +165,6 @@ public final class Util {
         Utility.logd("Facebook-Util", method + " URL: " + url);
         HttpURLConnection conn =
             (HttpURLConnection) new URL(url).openConnection();
-        conn.setUseCaches(false); //TITANIUM
         conn.setRequestProperty("User-Agent", System.getProperties().
                 getProperty("http.agent") + " FacebookAndroidSDK");
         if (!method.equals("GET")) {
@@ -217,23 +195,28 @@ public final class Util {
             conn.setDoInput(true);
             conn.setRequestProperty("Connection", "Keep-Alive");
             conn.connect();
+
             os = new BufferedOutputStream(conn.getOutputStream());
 
-            os.write(("--" + strBoundary +endLine).getBytes());
-            os.write((encodePostBody(params, strBoundary)).getBytes());
-            os.write((endLine + "--" + strBoundary + endLine).getBytes());
+            try {
+                os.write(("--" + strBoundary +endLine).getBytes());
+                os.write((encodePostBody(params, strBoundary)).getBytes());
+                os.write((endLine + "--" + strBoundary + endLine).getBytes());
 
-            if (!dataparams.isEmpty()) {
+                if (!dataparams.isEmpty()) {
 
-                for (String key: dataparams.keySet()){
-                    os.write(("Content-Disposition: form-data; filename=\"" + key + "\"" + endLine).getBytes());
-                    os.write(("Content-Type: content/unknown" + endLine + endLine).getBytes());
-                    os.write(dataparams.getByteArray(key));
-                    os.write((endLine + "--" + strBoundary + endLine).getBytes());
+                    for (String key: dataparams.keySet()){
+                        os.write(("Content-Disposition: form-data; filename=\"" + key + "\"" + endLine).getBytes());
+                        os.write(("Content-Type: content/unknown" + endLine + endLine).getBytes());
+                        os.write(dataparams.getByteArray(key));
+                        os.write((endLine + "--" + strBoundary + endLine).getBytes());
 
+                    }
                 }
+                os.flush();
+            } finally {
+                os.close();
             }
-            os.flush();
         }
 
         String response = "";
@@ -291,16 +274,8 @@ public final class Util {
         // they depend on the method and endpoint
         if (json.has("error")) {
             JSONObject error = json.getJSONObject("error");
-            // ************* APPCELERATOR TITANIUM CUSTOMIZATION *****************
-            //throw new FacebookError(
-            //        error.getString("message"), error.getString("type"), 0);
-            int code = 0;
-			try {
-				code = Integer.parseInt(error.getString("code"));
-			} catch (Exception e) {
-				code = 0;
-			}
-			throw new FacebookError(error.getString("message"), error.getString("type"), code);
+            throw new FacebookError(
+                    error.getString("message"), error.getString("type"), 0);
         }
         if (json.has("error_code") && json.has("error_msg")) {
             throw new FacebookError(json.getString("error_msg"), "",

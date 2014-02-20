@@ -1,5 +1,5 @@
 /**
- * Copyright 2012 Facebook
+ * Copyright 2010-present Facebook.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,25 +14,6 @@
  * limitations under the License.
  */
 
-/**
- * MODIFICATIONS
- * 
- * Facebook Module
- * Copyright (c) 2009-2013 by Appcelerator, Inc. All Rights Reserved.
- * Please see the LICENSE included with this distribution for details.
- */
-
-/**
- * NOTES
- * Modifications made for Titanium:
- * - In getSectionHeaderView(), getSectionHeaderView(), getActivityCircleView(),
- * 	getGraphObjectRowLayoutId(), getDefaultPicture(), createGraphObjectView(),
- * 	populateGraphObjectView() and getPictureFieldSpecifier(), fetch resource ids using Resources.getIdentifier.
- * 
- * Original file this is based on:
- * https://github.com/facebook/facebook-android-sdk/blob/4e2e6b90fbc964ca51a81e83e802bb4a62711a78/facebook/src/com/facebook/widget/GraphObjectAdapter.java
- */
-
 package com.facebook.widget;
 
 import android.content.Context;
@@ -43,12 +24,15 @@ import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.widget.*;
 import com.facebook.*;
+import com.facebook.internal.ImageDownloader;
+import com.facebook.internal.ImageRequest;
+import com.facebook.internal.ImageResponse;
 import com.facebook.model.GraphObject;
 import com.facebook.internal.Utility;
 import org.json.JSONObject;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.Collator;
 import java.util.*;
 
@@ -79,10 +63,14 @@ class GraphObjectAdapter<T extends GraphObject> extends BaseAdapter implements S
     private Context context;
     private Map<String, ImageResponse> prefetchedPictureCache = new HashMap<String, ImageResponse>();
     private ArrayList<String> prefetchedProfilePictureIds = new ArrayList<String>();
-
+    private OnErrorListener onErrorListener;
 
     public interface DataNeededListener {
         public void onDataNeeded();
+    }
+
+    public interface OnErrorListener {
+        void onError(GraphObjectAdapter<?> adapter, FacebookException error);
     }
 
     public static class SectionAndItem<T extends GraphObject> {
@@ -160,6 +148,14 @@ class GraphObjectAdapter<T extends GraphObject> extends BaseAdapter implements S
         this.dataNeededListener = dataNeededListener;
     }
 
+    public OnErrorListener getOnErrorListener() {
+        return onErrorListener;
+    }
+
+    public void setOnErrorListener(OnErrorListener onErrorListener) {
+        this.onErrorListener = onErrorListener;
+    }
+
     public GraphObjectCursor<T> getCursor() {
         return cursor;
     }
@@ -183,7 +179,7 @@ class GraphObjectAdapter<T extends GraphObject> extends BaseAdapter implements S
     }
 
     public void prioritizeViewRange(int firstVisibleItem, int lastVisibleItem, int prefetchBuffer) {
-        if (lastVisibleItem < firstVisibleItem) {
+        if ((lastVisibleItem < firstVisibleItem) || (sectionKeys.size() == 0)) {
             return;
         }
 
@@ -227,7 +223,7 @@ class GraphObjectAdapter<T extends GraphObject> extends BaseAdapter implements S
             }
         }
         for (T graphObject : graphObjectsToPrefetchPicturesFor) {
-            URL url = getPictureUrlOfGraphObject(graphObject);
+            URI uri = getPictureUriOfGraphObject(graphObject);
             final String id = getIdOfGraphObject(graphObject);
 
             // This URL already have been requested for pre-fetching, but we want to act in an LRU manner, so move
@@ -237,7 +233,7 @@ class GraphObjectAdapter<T extends GraphObject> extends BaseAdapter implements S
 
             // If we've already requested it for pre-fetching, no need to do so again.
             if (!alreadyPrefetching) {
-                downloadProfilePicture(id, url, null);
+                downloadProfilePicture(id, uri, null);
             }
         }
     }
@@ -263,23 +259,23 @@ class GraphObjectAdapter<T extends GraphObject> extends BaseAdapter implements S
         return null;
     }
 
-    protected URL getPictureUrlOfGraphObject(T graphObject) {
-        String url = null;
+    protected URI getPictureUriOfGraphObject(T graphObject) {
+        String uri = null;
         Object o = graphObject.getProperty(PICTURE);
         if (o instanceof String) {
-            url = (String) o;
+            uri = (String) o;
         } else if (o instanceof JSONObject) {
             ItemPicture itemPicture = GraphObject.Factory.create((JSONObject) o).cast(ItemPicture.class);
             ItemPictureData data = itemPicture.getData();
             if (data != null) {
-                url = data.getUrl();
+                uri = data.getUrl();
             }
         }
 
-        if (url != null) {
+        if (uri != null) {
             try {
-                return new URL(url);
-            } catch (MalformedURLException e) {
+                return new URI(uri);
+            } catch (URISyntaxException e) {
             }
         }
         return null;
@@ -289,9 +285,9 @@ class GraphObjectAdapter<T extends GraphObject> extends BaseAdapter implements S
         TextView result = (TextView) convertView;
 
         if (result == null) {
-        	// *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+            // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
             //result = (TextView) inflater.inflate(R.layout.com_facebook_picker_list_section_header, null);
-        	result = (TextView) inflater.inflate(Utility.resId_pickerListSectionHeader, null);
+            result = (TextView) inflater.inflate(Utility.resId_pickerListSectionHeader, null);
         }
 
         result.setText(sectionHeader);
@@ -303,7 +299,7 @@ class GraphObjectAdapter<T extends GraphObject> extends BaseAdapter implements S
         View result = convertView;
 
         if (result == null) {
-            result = createGraphObjectView(graphObject, convertView);
+            result = createGraphObjectView(graphObject);
         }
 
         populateGraphObjectView(result, graphObject);
@@ -314,9 +310,9 @@ class GraphObjectAdapter<T extends GraphObject> extends BaseAdapter implements S
         View result = convertView;
 
         if (result == null) {
-        	// *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+            // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
             //result = inflater.inflate(R.layout.com_facebook_picker_activity_circle_row, null);
-        	result = inflater.inflate(Utility.resId_pickerActivityCircle, null);
+            result = inflater.inflate(Utility.resId_pickerActivityCircle, null);
         }
         //ProgressBar activityCircle = (ProgressBar) result.findViewById(R.id.com_facebook_picker_row_activity_circle);
         ProgressBar activityCircle = (ProgressBar) result.findViewById(Utility.resId_pickerRowActivityCircle); //TITANIUM
@@ -326,18 +322,18 @@ class GraphObjectAdapter<T extends GraphObject> extends BaseAdapter implements S
     }
 
     protected int getGraphObjectRowLayoutId(T graphObject) {
-    	// *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
         //return R.layout.com_facebook_picker_list_row;
-    	return Utility.resId_pickerListRow;
+        return Utility.resId_pickerListRow;
     }
 
     protected int getDefaultPicture() {
-    	// *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
         //return R.drawable.com_facebook_profile_default_icon;
-    	return Utility.resId_profileDefaultIcon;
+        return Utility.resId_profileDefaultIcon;
     }
 
-    protected View createGraphObjectView(T graphObject, View convertView) {
+    protected View createGraphObjectView(T graphObject) {
         View result = inflater.inflate(getGraphObjectRowLayoutId(graphObject), null);
 
         // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
@@ -351,7 +347,6 @@ class GraphObjectAdapter<T extends GraphObject> extends BaseAdapter implements S
                 updateCheckboxState(checkBox, false);
             }
         }
-
         //ViewStub profilePicStub = (ViewStub) result.findViewById(R.id.com_facebook_picker_profile_pic_stub);
         ViewStub profilePicStub = (ViewStub) result.findViewById(Utility.resId_pickerProfilePicStub); //TITANIUM
         if (!getShowPicture()) {
@@ -390,24 +385,23 @@ class GraphObjectAdapter<T extends GraphObject> extends BaseAdapter implements S
 
         if (getShowCheckbox()) {
             //CheckBox checkBox = (CheckBox) view.findViewById(R.id.com_facebook_picker_checkbox);
-        	CheckBox checkBox = (CheckBox) view.findViewById(Utility.resId_pickerCheckbox); //TITANIUM
+            CheckBox checkBox = (CheckBox) view.findViewById(Utility.resId_pickerCheckbox); //TITANIUM
             updateCheckboxState(checkBox, isGraphObjectSelected(id));
         }
 
         if (getShowPicture()) {
-            URL pictureURL = getPictureUrlOfGraphObject(graphObject);
+            URI pictureURI = getPictureUriOfGraphObject(graphObject);
 
-            if (pictureURL != null) {
+            if (pictureURI != null) {
                 //ImageView profilePic = (ImageView) view.findViewById(R.id.com_facebook_picker_image);
-            	ImageView profilePic = (ImageView) view.findViewById(Utility.resId_pickerImage); //TITANIUM
-
+                ImageView profilePic = (ImageView) view.findViewById(Utility.resId_pickerImage); //TITANIUM
                 // See if we have already pre-fetched this; if not, download it.
                 if (prefetchedPictureCache.containsKey(id)) {
                     ImageResponse response = prefetchedPictureCache.get(id);
                     profilePic.setImageBitmap(response.getBitmap());
-                    profilePic.setTag(response.getRequest().getImageUrl());
+                    profilePic.setTag(response.getRequest().getImageUri());
                 } else {
-                    downloadProfilePicture(id, pictureURL, profilePic);
+                    downloadProfilePicture(id, pictureURI, profilePic);
                 }
             }
         }
@@ -448,7 +442,7 @@ class GraphObjectAdapter<T extends GraphObject> extends BaseAdapter implements S
 
     String getPictureFieldSpecifier() {
         // How big is our image?
-        View view = createGraphObjectView(null, null);
+        View view = createGraphObjectView(null);
         // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
         //ImageView picture = (ImageView) view.findViewById(R.id.com_facebook_picker_image);
         ImageView picture = (ImageView) view.findViewById(Utility.resId_pickerImage);
@@ -748,8 +742,8 @@ class GraphObjectAdapter<T extends GraphObject> extends BaseAdapter implements S
         return result;
     }
 
-    private void downloadProfilePicture(final String profileId, URL pictureURL, final ImageView imageView) {
-        if (pictureURL == null) {
+    private void downloadProfilePicture(final String profileId, URI pictureURI, final ImageView imageView) {
+        if (pictureURI == null) {
             return;
         }
 
@@ -758,7 +752,7 @@ class GraphObjectAdapter<T extends GraphObject> extends BaseAdapter implements S
         // only want to queue a download if the view's tag isn't already set to the URL (which would mean
         // it's already got the correct picture).
         boolean prefetching = imageView == null;
-        if (prefetching || !pictureURL.equals(imageView.getTag())) {
+        if (prefetching || !pictureURI.equals(imageView.getTag())) {
             if (!prefetching) {
                 // Setting the tag to the profile ID indicates that we're currently downloading the
                 // picture for this profile; we'll set it to the actual picture URL when complete.
@@ -766,7 +760,7 @@ class GraphObjectAdapter<T extends GraphObject> extends BaseAdapter implements S
                 imageView.setImageResource(getDefaultPicture());
             }
 
-            ImageRequest.Builder builder = new ImageRequest.Builder(context.getApplicationContext(), pictureURL)
+            ImageRequest.Builder builder = new ImageRequest.Builder(context.getApplicationContext(), pictureURI)
                     .setCallerTag(this)
                     .setCallback(
                             new ImageRequest.Callback() {
@@ -783,8 +777,21 @@ class GraphObjectAdapter<T extends GraphObject> extends BaseAdapter implements S
         }
     }
 
+    private void callOnErrorListener(Exception exception) {
+        if (onErrorListener != null) {
+            if (!(exception instanceof FacebookException)) {
+                exception = new FacebookException(exception);
+            }
+            onErrorListener.onError(this, (FacebookException) exception);
+        }
+    }
+
     private void processImageResponse(ImageResponse response, String graphObjectId, ImageView imageView) {
         pendingRequests.remove(graphObjectId);
+        if (response.getError() != null) {
+            callOnErrorListener(response.getError());
+        }
+
         if (imageView == null) {
             // This was a pre-fetch request.
             if (response.getBitmap() != null) {
@@ -796,12 +803,12 @@ class GraphObjectAdapter<T extends GraphObject> extends BaseAdapter implements S
                 }
                 prefetchedPictureCache.put(graphObjectId, response);
             }
-        } else if (imageView != null && graphObjectId.equals(imageView.getTag())) {
+        } else if (graphObjectId.equals(imageView.getTag())) {
             Exception error = response.getError();
             Bitmap bitmap = response.getBitmap();
             if (error == null && bitmap != null) {
                 imageView.setImageBitmap(bitmap);
-                imageView.setTag(response.getRequest().getImageUrl());
+                imageView.setTag(response.getRequest().getImageUri());
             }
         }
     }

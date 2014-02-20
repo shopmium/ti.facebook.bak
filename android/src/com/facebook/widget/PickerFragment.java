@@ -1,5 +1,5 @@
 /**
- * Copyright 2012 Facebook
+ * Copyright 2010-present Facebook.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,23 +12,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
-
-/**
- * MODIFICATIONS
- * 
- * Facebook Module
- * Copyright (c) 2009-2013 by Appcelerator, Inc. All Rights Reserved.
- * Please see the LICENSE included with this distribution for details.
- */
-
-/**
- * NOTES
- * Modifications made for Titanium:
- * - In onCreateView(), getDefaultDoneButtonText() and inflateTitleBar(), fetch resource ids using Resources.getIdentifier.
- * 
- * Original file this is based on:
- * https://github.com/facebook/facebook-android-sdk/blob/4e2e6b90fbc964ca51a81e83e802bb4a62711a78/facebook/src/com/facebook/widget/PickerFragment.java
  */
 
 package com.facebook.widget;
@@ -119,6 +102,7 @@ public abstract class PickerFragment<T extends GraphObject> extends Fragment {
     private Button doneButton;
     private Drawable titleBarBackground;
     private Drawable doneButtonBackground;
+    private boolean appEventsLogged;
 
     PickerFragment(Class<T> graphObjectClass, int layout, Bundle args) {
         this.graphObjectClass = graphObjectClass;
@@ -143,28 +127,27 @@ public abstract class PickerFragment<T extends GraphObject> extends Fragment {
     @Override
     public void onInflate(Activity activity, AttributeSet attrs, Bundle savedInstanceState) {
         super.onInflate(activity, attrs, savedInstanceState);
-//        TypedArray a = activity.obtainStyledAttributes(attrs, R.styleable.com_facebook_picker_fragment);
-//
-//        setShowPictures(a.getBoolean(R.styleable.com_facebook_picker_fragment_show_pictures, showPictures));
-//        String extraFieldsString = a.getString(R.styleable.com_facebook_picker_fragment_extra_fields);
-//        if (extraFieldsString != null) {
-//            String[] strings = extraFieldsString.split(",");
-//            setExtraFields(Arrays.asList(strings));
-//        }
-//
-//        showTitleBar = a.getBoolean(R.styleable.com_facebook_picker_fragment_show_title_bar, showTitleBar);
-//        titleText = a.getString(R.styleable.com_facebook_picker_fragment_title_text);
-//        doneButtonText = a.getString(R.styleable.com_facebook_picker_fragment_done_button_text);
-//        titleBarBackground = a.getDrawable(R.styleable.com_facebook_picker_fragment_title_bar_background);
-//        doneButtonBackground = a.getDrawable(R.styleable.com_facebook_picker_fragment_done_button_background);
-//
-//        a.recycle();
+        // TypedArray a = activity.obtainStyledAttributes(attrs, R.styleable.com_facebook_picker_fragment);
+
+        // setShowPictures(a.getBoolean(R.styleable.com_facebook_picker_fragment_show_pictures, showPictures));
+        // String extraFieldsString = a.getString(R.styleable.com_facebook_picker_fragment_extra_fields);
+        // if (extraFieldsString != null) {
+        //     String[] strings = extraFieldsString.split(",");
+        //     setExtraFields(Arrays.asList(strings));
+        // }
+
+        // showTitleBar = a.getBoolean(R.styleable.com_facebook_picker_fragment_show_title_bar, showTitleBar);
+        // titleText = a.getString(R.styleable.com_facebook_picker_fragment_title_text);
+        // doneButtonText = a.getString(R.styleable.com_facebook_picker_fragment_done_button_text);
+        // titleBarBackground = a.getDrawable(R.styleable.com_facebook_picker_fragment_title_bar_background);
+        // doneButtonBackground = a.getDrawable(R.styleable.com_facebook_picker_fragment_done_button_background);
+
+        // a.recycle();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         ViewGroup view = (ViewGroup) inflater.inflate(layout, container, false);
-
         // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
         //listView = (ListView) view.findViewById(R.id.com_facebook_picker_list_view);
         listView = (ListView) view.findViewById(Utility.resId_pickerListView);
@@ -184,10 +167,13 @@ public abstract class PickerFragment<T extends GraphObject> extends Fragment {
             }
         });
         listView.setOnScrollListener(onScrollListener);
-        listView.setAdapter(adapter);
 
         //activityCircle = (ProgressBar) view.findViewById(R.id.com_facebook_picker_activity_circle);
         activityCircle = (ProgressBar) view.findViewById(Utility.resId_pickerActivityCircle); //TITANIUM
+
+        setupViews(view);
+
+        listView.setAdapter(adapter);
 
         return view;
     }
@@ -250,6 +236,14 @@ public abstract class PickerFragment<T extends GraphObject> extends Fragment {
         if (activityCircle != null) {
             outState.putBoolean(ACTIVITY_CIRCLE_SHOW_KEY, activityCircle.getVisibility() == View.VISIBLE);
         }
+    }
+
+    @Override
+    public void onStop() {
+        if (!appEventsLogged) {
+            logAppEvents(false);
+        }
+        super.onStop();
     }
 
     @Override
@@ -509,6 +503,9 @@ public abstract class PickerFragment<T extends GraphObject> extends Fragment {
         setPickerFragmentSettingsFromBundle(inState);
     }
 
+    void setupViews(ViewGroup view) {
+    }
+
     boolean filterIncludesItem(T graphObject) {
         if (filter != null) {
             return filter.includeItem(graphObject);
@@ -518,6 +515,14 @@ public abstract class PickerFragment<T extends GraphObject> extends Fragment {
 
     List<T> getSelectedGraphObjects() {
         return adapter.getGraphObjectsById(selectionStrategy.getSelectedIds());
+    }
+
+    void setSelectedGraphObjects(List<String> objectIds) {
+        for(String objectId : objectIds) {
+            if(!this.selectionStrategy.isSelected(objectId)) {
+                this.selectionStrategy.toggleSelection(objectId);
+            }
+        }
     }
 
     void saveSettingsToBundle(Bundle outState) {
@@ -546,9 +551,9 @@ public abstract class PickerFragment<T extends GraphObject> extends Fragment {
     }
 
     String getDefaultDoneButtonText() {
-    	// *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-    	// return getString(R.string.com_facebook_picker_done_button_text);
-    	return getString(Utility.resId_pickerDoneButtonText);
+        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+        //return getString(R.string.com_facebook_picker_done_button_text);
+        return getString(Utility.resId_pickerDoneButtonText);
     }
 
     void displayActivityCircle() {
@@ -581,6 +586,9 @@ public abstract class PickerFragment<T extends GraphObject> extends Fragment {
                 adapter.notifyDataSetChanged();
             }
         }
+    }
+
+    void logAppEvents(boolean doneButtonClicked) {
     }
 
     private static void setAlpha(View view, float alpha) {
@@ -620,15 +628,15 @@ public abstract class PickerFragment<T extends GraphObject> extends Fragment {
     }
 
     private void inflateTitleBar(ViewGroup view) {
-    	// *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
         //ViewStub stub = (ViewStub) view.findViewById(R.id.com_facebook_picker_title_bar_stub);
-    	ViewStub stub = (ViewStub) view.findViewById(Utility.resId_pickerTitleBarStub);
+        ViewStub stub = (ViewStub) view.findViewById(Utility.resId_pickerTitleBarStub);
         if (stub != null) {
             View titleBar = stub.inflate();
 
             final RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(
-                    RelativeLayout.LayoutParams.FILL_PARENT,
-                    RelativeLayout.LayoutParams.FILL_PARENT);
+                    RelativeLayout.LayoutParams.MATCH_PARENT,
+                    RelativeLayout.LayoutParams.MATCH_PARENT);
             //layoutParams.addRule(RelativeLayout.BELOW, R.id.com_facebook_picker_title_bar);
             layoutParams.addRule(RelativeLayout.BELOW, Utility.resId_pickerTitleBar); //TITAINIUM
             listView.setLayoutParams(layoutParams);
@@ -643,6 +651,9 @@ public abstract class PickerFragment<T extends GraphObject> extends Fragment {
                 doneButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        logAppEvents(true);
+                        appEventsLogged = true;
+
                         if (onDoneButtonClickedListener != null) {
                             onDoneButtonClickedListener.onDoneButtonClicked(PickerFragment.this);
                         }
@@ -874,10 +885,19 @@ public abstract class PickerFragment<T extends GraphObject> extends Fragment {
             this.adapter = adapter;
             // Tell the adapter about any data we might already have.
             this.adapter.changeCursor(loader.getCursor());
+            this.adapter.setOnErrorListener(new GraphObjectAdapter.OnErrorListener() {
+                @Override
+                public void onError(GraphObjectAdapter<?> adapter, FacebookException error) {
+                    if (onErrorListener != null) {
+                        onErrorListener.onError(PickerFragment.this, error);
+                    }
+                }
+            });
         }
 
         public void detach() {
             adapter.setDataNeededListener(null);
+            adapter.setOnErrorListener(null);
             loader.setOnErrorListener(null);
 
             loader = null;

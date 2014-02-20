@@ -13,28 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * MODIFICATIONS
- * 
- * Facebook Module
- * Copyright (c) 2009-2013 by Appcelerator, Inc. All Rights Reserved.
- * Please see the LICENSE included with this distribution for details.
- */
-
-/**
- * NOTES
- * Modifications made for Titanium:
- * - Add custom version of authorize() which accept TiActivitySupport and 
- * 	TiActivityResultHandler as arguments so that we can hook into the 
- * 	activity's onActivityResult.
- * - In logoutImpl(Context), use the specified context to clear cookies if 
- * 	the staticContext of Session is null.
- * 
- * Original file this is based on:
- * https://github.com/facebook/facebook-android-sdk/blob/4e2e6b90fbc964ca51a81e83e802bb4a62711a78/facebook/src/com/facebook/android/Facebook.java
- */
 
 package com.facebook.android;
+
+import android.Manifest;
+import android.app.Activity;
+import android.content.*;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.pm.ResolveInfo;
+import android.content.pm.Signature;
+import android.net.Uri;
+import android.os.*;
+import com.facebook.*;
+import com.facebook.Session.StatusCallback;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -47,38 +40,7 @@ import java.util.List;
 import org.appcelerator.titanium.util.TiActivityResultHandler;
 import org.appcelerator.titanium.util.TiActivitySupport;
 
-import android.Manifest;
-import android.app.Activity;
-import android.content.ComponentName;
-import android.content.ContentResolver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.NameNotFoundException;
-import android.content.pm.ResolveInfo;
-import android.content.pm.Signature;
-import android.net.Uri;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.IBinder;
-import android.os.Message;
-import android.os.Messenger;
-import android.os.RemoteException;
-
-import com.facebook.AccessTokenSource;
-import com.facebook.FacebookAuthorizationException;
-import com.facebook.FacebookOperationCanceledException;
-import com.facebook.LegacyHelper;
-import com.facebook.Request;
 import com.facebook.Session;
-import com.facebook.Session.StatusCallback;
-import com.facebook.SessionLoginBehavior;
-import com.facebook.SessionState;
-import com.facebook.Settings;
-import com.facebook.TokenCachingStrategy;
-
 /**
  * THIS CLASS SHOULD BE CONSIDERED DEPRECATED.
  * <p/>
@@ -148,11 +110,11 @@ public class Facebook {
 
     // If the last time we extended the access token was more than 24 hours ago
     // we try to refresh the access token again.
-    final private long REFRESH_TOKEN_BARRIER = 24L * 60L * 60L * 1000L;
+    final private static long REFRESH_TOKEN_BARRIER = 24L * 60L * 60L * 1000L;
 
     /**
      * Constructor for Facebook object.
-     * 
+     *
      * @param appId
      *            Your Facebook application ID. Found at
      *            www.facebook.com/developers/apps.php.
@@ -265,16 +227,16 @@ public class Facebook {
 
     /**
      * Full authorize method.
-     * 
+     *
      * Starts either an Activity or a dialog which prompts the user to log in to
      * Facebook and grant the requested permissions to the given application.
-     * 
+     *
      * This method will, when possible, use Facebook's single sign-on for
      * Android to obtain an access token. This involves proxying a call through
      * the Facebook for Android stand-alone application, which will handle the
      * authentication flow, and return an OAuth access token for making API
      * calls.
-     * 
+     *
      * Because this process will not be available for all users, if single
      * sign-on is not possible, this method will automatically fall back to the
      * OAuth 2.0 User-Agent flow. In this flow, the user credentials are handled
@@ -282,25 +244,25 @@ public class Facebook {
      * such, the dialog makes a network request and renders HTML content rather
      * than a native UI. The access token is retrieved from a redirect to a
      * special URL that the WebView handles.
-     * 
+     *
      * Note that User credentials could be handled natively using the OAuth 2.0
      * Username and Password Flow, but this is not supported by this SDK.
-     * 
+     *
      * See http://developers.facebook.com/docs/authentication/ and
      * http://wiki.oauth.net/OAuth-2 for more details.
-     * 
+     *
      * Note that this method is asynchronous and the callback will be invoked in
      * the original calling thread (not in a background thread).
-     * 
+     *
      * Also note that requests may be made to the API without calling authorize
      * first, in which case only public information is returned.
-     * 
+     *
      * IMPORTANT: Note that single sign-on authentication will not function
      * correctly if you do not include a call to the authorizeCallback() method
      * in your onActivityResult() function! Please see below for more
      * information. single sign-on may be disabled by passing FORCE_DIALOG_AUTH
      * as the activityCode parameter in your call to authorize().
-     * 
+     *
      * @param activity
      *            The Android activity in which we want to display the
      *            authorization dialog.
@@ -351,8 +313,17 @@ public class Facebook {
                 setCallback(callback).
                 setLoginBehavior(behavior).
                 setRequestCode(activityCode).
-                setPermissions(Arrays.asList(permissions));
+                setPermissions(Arrays.asList(pendingAuthorizationPermissions));
         openSession(pendingOpeningSession, openRequest, pendingAuthorizationPermissions.length > 0);
+    }
+
+    private void openSession(Session session, Session.OpenRequest openRequest, boolean isPublish) {
+        openRequest.setIsLegacy(true);
+        if (isPublish) {
+            session.openForPublish(openRequest);
+        } else {
+            session.openForRead(openRequest);
+        }
     }
 
     // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
@@ -362,9 +333,9 @@ public class Facebook {
      */
     public void authorize(Activity activity, TiActivitySupport activitySupport, String[] permissions,
         int activityCode, final DialogListener listener, TiActivityResultHandler resultHandler) {
-    	SessionLoginBehavior behavior = (activityCode >= 0) ? SessionLoginBehavior.SSO_WITH_FALLBACK
+       SessionLoginBehavior behavior = (activityCode >= 0) ? SessionLoginBehavior.SSO_WITH_FALLBACK
             : SessionLoginBehavior.SUPPRESS_SSO;
-    	checkUserSession("authorize");
+        checkUserSession("authorize");
         pendingOpeningSession = new Session.Builder(activity).
                 setApplicationId(mAppId).
                 setTokenCachingStrategy(getTokenCache()).
@@ -385,18 +356,11 @@ public class Facebook {
                 setCallback(callback).
                 setLoginBehavior(behavior).
                 setRequestCode(activityCode).
-                setPermissions(Arrays.asList(permissions));
-        openSession(pendingOpeningSession, openRequest, pendingAuthorizationPermissions.length > 0);
-    }
+                setPermissions(Arrays.asList(permissions)).
+                setPermissions(Arrays.asList(pendingAuthorizationPermissions));
+         openSession(pendingOpeningSession, openRequest, pendingAuthorizationPermissions.length > 0);
+     }
 
-    private void openSession(Session session, Session.OpenRequest openRequest, boolean isPublish) {
-        openRequest.setIsLegacy(true);
-        if (isPublish) {
-            session.openForPublish(openRequest);
-        } else {
-            session.openForRead(openRequest);
-        }
-    }
 
     @SuppressWarnings("deprecation")
     private void onSessionCallback(Session callbackSession, SessionState state, Exception exception,
@@ -439,7 +403,7 @@ public class Facebook {
     /**
      * Helper to validate a service intent by resolving and checking the
      * provider's package signature.
-     * 
+     *
      * @param context
      * @param intent
      * @return true if the service intent resolution happens successfully and
@@ -457,7 +421,7 @@ public class Facebook {
     /**
      * Query the signature for the application that would be invoked by the
      * given intent and verify that it matches the FB application's signature.
-     * 
+     *
      * @param context
      * @param packageName
      * @return true if the app's signature matches the expected signature.
@@ -688,11 +652,9 @@ public class Facebook {
                 }
             }
 
-            if (connection != null) {
-                // The refreshToken function should be called rarely,
-                // so there is no point in keeping the binding open.
-                connection.applicationsContext.unbindService(connection);
-            }
+            // The refreshToken function should be called rarely,
+            // so there is no point in keeping the binding open.
+            connection.applicationsContext.unbindService(connection);
         }
     }
 
@@ -740,10 +702,7 @@ public class Facebook {
         }
 
         if (sessionToClose != null) {
-        	// *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-        	// Use the specified context to clear cookies if the staticContext of Session is null.
-            //sessionToClose.closeAndClearTokenInformation();
-        	sessionToClose.closeAndClearTokenInformation(context);
+            sessionToClose.closeAndClearTokenInformation();
         }
 
         return response;
@@ -915,7 +874,7 @@ public class Facebook {
      * the original calling thread (not in a background thread).
      *
      * This method is deprecated. See {@link com.facebook.widget.WebDialog}.
-     * 
+     *
      * @param context
      *            The Android context in which we will generate this dialog.
      * @param action
@@ -988,7 +947,7 @@ public class Facebook {
 
     /**
      * Get the underlying Session object to use with 3.0 api.
-     * 
+     *
      * @return Session - underlying session
      */
     @Deprecated
@@ -1213,7 +1172,8 @@ public class Facebook {
     }
 
     private static String[] stringArray(List<String> list) {
-        String[] array = new String[list.size()];
+        int size = (list != null) ? list.size() : 0;
+        String[] array = new String[size];
 
         if (list != null) {
             for (int i = 0; i < array.length; i++) {
@@ -1339,9 +1299,9 @@ public class Facebook {
 
         /**
          * Called when a dialog completes.
-         * 
+         *
          * Executed by the thread that initiated the dialog.
-         * 
+         *
          * @param values
          *            Key-value string pairs extracted from the response.
          */
@@ -1349,25 +1309,25 @@ public class Facebook {
 
         /**
          * Called when a Facebook responds to a dialog with an error.
-         * 
+         *
          * Executed by the thread that initiated the dialog.
-         * 
+         *
          */
         public void onFacebookError(FacebookError e);
 
         /**
          * Called when a dialog has an error.
-         * 
+         *
          * Executed by the thread that initiated the dialog.
-         * 
+         *
          */
         public void onError(DialogError e);
 
         /**
          * Called when a dialog is canceled by the user.
-         * 
+         *
          * Executed by the thread that initiated the dialog.
-         * 
+         *
          */
         public void onCancel();
 
@@ -1392,7 +1352,7 @@ public class Facebook {
 
         /**
          * Called when a service request completes.
-         * 
+         *
          * @param values
          *            Key-value string pairs extracted from the response.
          */

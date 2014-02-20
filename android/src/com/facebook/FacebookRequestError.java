@@ -1,5 +1,5 @@
 /**
- * Copyright 2012 Facebook
+ * Copyright 2010-present Facebook.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,23 +12,6 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
-
-/**
- * MODIFICATIONS
- * 
- * Facebook Module
- * Copyright (c) 2009-2013 by Appcelerator, Inc. All Rights Reserved.
- * Please see the LICENSE included with this distribution for details.
- */
-
-/**
- * NOTES
- * Modifications made for Titanium:
- * - In FacebookRequestError(), fetch resource ids using Resources.getIdentifier.
- * 
- * Original file this is based on:
- * https://github.com/facebook/facebook-android-sdk/blob/4e2e6b90fbc964ca51a81e83e802bb4a62711a78/facebook/src/com/facebook/FacebookRequestError.java
  */
 
 package com.facebook;
@@ -99,6 +82,7 @@ public final class FacebookRequestError {
     private static final int EC_APP_NOT_INSTALLED = 458;
     private static final int EC_USER_CHECKPOINTED = 459;
     private static final int EC_PASSWORD_CHANGED = 460;
+    private static final int EC_EXPIRED = 463;
     private static final int EC_UNCONFIRMED_USER = 464;
 
     private static final Range HTTP_RANGE_SUCCESS = new Range(200, 299);
@@ -168,15 +152,16 @@ public final class FacebookRequestError {
                 } else {
                     errorCategory = Category.AUTHENTICATION_REOPEN_SESSION;
 
-                    if (subErrorCode == EC_APP_NOT_INSTALLED) {
+                    if ((subErrorCode == EC_APP_NOT_INSTALLED) || (subErrorCode == EC_EXPIRED)) {
                         //messageId = R.string.com_facebook_requesterror_relogin;
-                    	messageId = Utility.resId_requestErrorRelogin;
+                        messageId = Utility.resId_requestErrorRelogin;
                     } else if (subErrorCode == EC_PASSWORD_CHANGED) {
                         //messageId = R.string.com_facebook_requesterror_password_changed;
-                    	messageId = Utility.resId_requestErrorPasswordChanged;
+                        messageId = Utility.resId_requestErrorPasswordChanged;
                     } else {
                         //messageId = R.string.com_facebook_requesterror_reconnect;
-                    	messageId = Utility.resId_requestErrorReconnect;
+                        messageId = Utility.resId_requestErrorReconnect;
+                        shouldNotify = true;
                     }
                 }
             }
@@ -360,7 +345,7 @@ public final class FacebookRequestError {
                 .append(", errorType: ")
                 .append(errorType)
                 .append(", errorMessage: ")
-                .append(errorMessage)
+                .append(getErrorMessage())
                 .append("}")
                 .toString();
     }

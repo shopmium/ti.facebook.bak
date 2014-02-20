@@ -1,5 +1,5 @@
 /**
- * Copyright 2012 Facebook
+ * Copyright 2010-present Facebook.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,37 +14,10 @@
  * limitations under the License.
  */
 
-/**
- * MODIFICATIONS
- * 
- * Facebook Module
- * Copyright (c) 2009-2013 by Appcelerator, Inc. All Rights Reserved.
- * Please see the LICENSE included with this distribution for details.
- */
-
-/**
- * NOTES
- * Modifications made for Titanium:
- * - In PlacePickerFragment(Bundle), onInflate(), onActivityCreated(),
- * 	getDefaultTitleText(), getSubTitleOfGraphObject(), getGraphObjectRowLayoutId(), and
- * 	getDefaultPicture(), fetch resource ids using Resources.getIdentifier.
- * 
- * Original file this is based on:
- * https://github.com/facebook/facebook-android-sdk/blob/4e2e6b90fbc964ca51a81e83e802bb4a62711a78/facebook/src/com/facebook/widget/PlacePickerFragment.java
- */
-
 package com.facebook.widget;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.location.Location;
 import android.os.Bundle;
@@ -54,20 +27,18 @@ import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
+import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewStub;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.RelativeLayout;
-
-import com.facebook.FacebookException;
-import com.facebook.LoggingBehavior;
-import com.facebook.Request;
-import com.facebook.Session;
+import com.facebook.*;
+import com.facebook.internal.AnalyticsEvents;
+import com.facebook.model.GraphPlace;
 import com.facebook.internal.Logger;
 import com.facebook.internal.Utility;
-import com.facebook.model.GraphPlace;
+
+import java.util.*;
 
 public class PlacePickerFragment extends PickerFragment<GraphPlace> {
     /**
@@ -137,7 +108,7 @@ public class PlacePickerFragment extends PickerFragment<GraphPlace> {
      *             configuration information for the Fragment.
      */
     public PlacePickerFragment(Bundle args) {
-    	// *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
         //super(GraphPlace.class, R.layout.com_facebook_placepickerfragment, args);
         super(GraphPlace.class, Utility.resId_placePickerFragment, args);
         setPlacePickerSettingsFromBundle(args);
@@ -263,7 +234,7 @@ public class PlacePickerFragment extends PickerFragment<GraphPlace> {
      */
     public GraphPlace getSelection() {
         Collection<GraphPlace> selection = getSelectedGraphObjects();
-        return (selection != null && selection.size() > 0) ? selection.iterator().next() : null;
+        return (selection != null && !selection.isEmpty()) ? selection.iterator().next() : null;
     }
 
     public void setSettingsFromBundle(Bundle inState) {
@@ -275,67 +246,47 @@ public class PlacePickerFragment extends PickerFragment<GraphPlace> {
     public void onInflate(Activity activity, AttributeSet attrs, Bundle savedInstanceState) {
         super.onInflate(activity, attrs, savedInstanceState);
         // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-//        TypedArray a = activity.obtainStyledAttributes(attrs, R.styleable.com_facebook_place_picker_fragment);
-//
-//        setRadiusInMeters(a.getInt(R.styleable.com_facebook_place_picker_fragment_radius_in_meters, radiusInMeters));
-//        setResultsLimit(a.getInt(R.styleable.com_facebook_place_picker_fragment_results_limit, resultsLimit));
-//        if (a.hasValue(R.styleable.com_facebook_place_picker_fragment_results_limit)) {
-//            setSearchText(a.getString(R.styleable.com_facebook_place_picker_fragment_search_text));
-//        }
-//        showSearchBox = a.getBoolean(R.styleable.com_facebook_place_picker_fragment_show_search_box, showSearchBox);
-//
-//        a.recycle();
-		TypedArray a = activity.obtainStyledAttributes(attrs, getResources().getIntArray(Utility.resId_placePickerFragmentAttrs));
+        // TypedArray a = activity.obtainStyledAttributes(attrs, R.styleable.com_facebook_place_picker_fragment);
 
-		setRadiusInMeters(a.getInt(Utility.resId_placePickerFragmentRadiusInMeters, radiusInMeters));
-		setResultsLimit(a.getInt(Utility.resId_placePickerFragmentResultsLimit, resultsLimit));
-		if (a.hasValue(Utility.resId_placePickerFragmentResultsLimit)) {
-			setSearchText(a.getString(Utility.resId_placePickerFragmentSearchText));
-		}
-		showSearchBox = a.getBoolean(Utility.resId_placePickerFragmentShowSearchBox, showSearchBox);
+        // setRadiusInMeters(a.getInt(R.styleable.com_facebook_place_picker_fragment_radius_in_meters, radiusInMeters));
+        // setResultsLimit(a.getInt(R.styleable.com_facebook_place_picker_fragment_results_limit, resultsLimit));
+        // if (a.hasValue(R.styleable.com_facebook_place_picker_fragment_results_limit)) {
+        //     setSearchText(a.getString(R.styleable.com_facebook_place_picker_fragment_search_text));
+        // }
+        // showSearchBox = a.getBoolean(R.styleable.com_facebook_place_picker_fragment_show_search_box, showSearchBox);
 
-		a.recycle();
+        TypedArray a = activity.obtainStyledAttributes(attrs, getResources().getIntArray(Utility.resId_placePickerFragmentAttrs));
+
+        setRadiusInMeters(a.getInt(Utility.resId_placePickerFragmentRadiusInMeters, radiusInMeters));
+        setResultsLimit(a.getInt(Utility.resId_placePickerFragmentResultsLimit, resultsLimit));
+        if (a.hasValue(Utility.resId_placePickerFragmentResultsLimit)) {
+            setSearchText(a.getString(Utility.resId_placePickerFragmentSearchText));
+        }
+        showSearchBox = a.getBoolean(Utility.resId_placePickerFragmentShowSearchBox, showSearchBox);
+
+        a.recycle();
     }
 
     @Override
-    public void onActivityCreated(final Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-
-        ViewGroup view = (ViewGroup) getView();
+    void setupViews(ViewGroup view) {
         if (showSearchBox) {
-        	// *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-            //ViewStub stub = (ViewStub) view.findViewById(R.id.com_facebook_placepickerfragment_search_box_stub);
-        	ViewStub stub = (ViewStub) view.findViewById(Utility.resId_placePickerFragmentSearchBoxStub);
-            if (stub != null) {
-                searchBox = (EditText) stub.inflate();
+            // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+            //ListView listView = (ListView) view.findViewById(R.id.com_facebook_picker_list_view);
+            //View searchHeaderView = getActivity().getLayoutInflater().inflate(
+                    //R.layout.com_facebook_picker_search_box, listView, false);
 
-                // Put the list under the search box
-                RelativeLayout.LayoutParams layoutParams = new RelativeLayout.LayoutParams(
-                        RelativeLayout.LayoutParams.FILL_PARENT,
-                        RelativeLayout.LayoutParams.FILL_PARENT);
-                //layoutParams.addRule(RelativeLayout.BELOW, R.id.search_box);
-                layoutParams.addRule(RelativeLayout.BELOW, Utility.resId_searchBox); //TITANIUM
+            ListView listView = (ListView) view.findViewById(Utility.resId_pickerListView);
+            View searchHeaderView = getActivity().getLayoutInflater().inflate(
+                    Utility.resId_pickerSearchBox, listView, false);
 
-                //ListView listView = (ListView) view.findViewById(R.id.com_facebook_picker_list_view);
-                ListView listView = (ListView) view.findViewById(Utility.resId_pickerListView); //TITANIUM
-                listView.setLayoutParams(layoutParams);
+            listView.addHeaderView(searchHeaderView, null, false);
 
-                // If we need to, put the search box under the title bar.
-                //if (view.findViewById(R.id.com_facebook_picker_title_bar) != null) {
-                if (view.findViewById(Utility.resId_pickerTitleBar) != null) { //TITANIUM
-                    layoutParams = new RelativeLayout.LayoutParams(
-                            RelativeLayout.LayoutParams.FILL_PARENT,
-                            RelativeLayout.LayoutParams.WRAP_CONTENT);
-                    //layoutParams.addRule(RelativeLayout.BELOW, R.id.com_facebook_picker_title_bar);
-                    layoutParams.addRule(RelativeLayout.BELOW, Utility.resId_pickerTitleBar);  //TITANIUM
+            //searchBox = (EditText) view.findViewById(R.id.com_facebook_picker_search_text);
+            searchBox = (EditText) view.findViewById(Utility.resId_pickerSearchText);
 
-                    searchBox.setLayoutParams(layoutParams);
-                }
-
-                searchBox.addTextChangedListener(new SearchTextWatcher());
-                if (!TextUtils.isEmpty(searchText)) {
-                    searchBox.setText(searchText);
-                }
+            searchBox.addTextChangedListener(new SearchTextWatcher());
+            if (!TextUtils.isEmpty(searchText)) {
+                searchBox.setText(searchText);
             }
         }
     }
@@ -382,9 +333,25 @@ public class PlacePickerFragment extends PickerFragment<GraphPlace> {
 
     @Override
     String getDefaultTitleText() {
-    	// *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
         //return getString(R.string.com_facebook_nearby);
-    	return getString(Utility.resId_nearby);
+        return getString(Utility.resId_nearby);
+    }
+
+    @Override
+    void logAppEvents(boolean doneButtonClicked) {
+        AppEventsLogger logger = AppEventsLogger.newLogger(this.getActivity(), getSession());
+        Bundle parameters = new Bundle();
+
+        // If Done was clicked, we know this completed successfully. If not, we don't know (caller might have
+        // dismissed us in response to selection changing, or user might have hit back button). Either way
+        // we'll log the number of selections.
+        String outcome = doneButtonClicked ? AnalyticsEvents.PARAMETER_DIALOG_OUTCOME_VALUE_COMPLETED :
+                AnalyticsEvents.PARAMETER_DIALOG_OUTCOME_VALUE_UNKNOWN;
+        parameters.putString(AnalyticsEvents.PARAMETER_DIALOG_OUTCOME, outcome);
+        parameters.putInt("num_places_picked", (getSelection() != null) ? 1 : 0);
+
+        logger.logSdkEvent(AnalyticsEvents.EVENT_PLACE_PICKER_USAGE, null, parameters);
     }
 
     @Override
@@ -398,7 +365,7 @@ public class PlacePickerFragment extends PickerFragment<GraphPlace> {
 
                 String result = null;
                 if (category != null && wereHereCount != null) {
-                	// *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+                    // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
                     //result = getString(R.string.com_facebook_placepicker_subtitle_format, category, wereHereCount);
                     result = getString(Utility.resId_placePickerSubtitleFormat, category, wereHereCount);
                 } else if (category == null && wereHereCount != null) {
@@ -413,16 +380,15 @@ public class PlacePickerFragment extends PickerFragment<GraphPlace> {
 
             @Override
             protected int getGraphObjectRowLayoutId(GraphPlace graphObject) {
-            	// *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+                // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
                 //return R.layout.com_facebook_placepickerfragment_list_row;
-            	return Utility.resId_placePickerFragmentListRow;
+                return Utility.resId_placePickerFragmentListRow;
             }
 
             @Override
             protected int getDefaultPicture() {
-            	// *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
                 //return R.drawable.com_facebook_place_default_icon;
-            	return Utility.resId_placeDefaultIcon;
+                return Utility.resId_placeDefaultIcon;
             }
 
         };

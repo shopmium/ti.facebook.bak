@@ -1,5 +1,5 @@
 /**
- * Copyright 2012 Facebook
+ * Copyright 2010-present Facebook.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,41 +14,23 @@
  * limitations under the License.
  */
 
-/**
- * MODIFICATIONS
- * 
- * Facebook Module
- * Copyright (c) 2009-2013 by Appcelerator, Inc. All Rights Reserved.
- * Please see the LICENSE included with this distribution for details.
- */
-
-/**
- * NOTES
- * Modifications made for Titanium:
- * - In FriendPickerFragment(), onInflate(), getGraphObjectRowLayoutId(), getDefaultPicture()
- * 	and getDefaultTitleText(), fetch resource ids using Resources.getIdentifier.
- * - Don't use android.annotation.SuppressLint since it is only for API 16+.
- * 
- * Original file this is based on:
- * https://github.com/facebook/facebook-android-sdk/blob/4e2e6b90fbc964ca51a81e83e802bb4a62711a78/facebook/src/com/facebook/widget/FriendPickerFragment.java
- */
-
 package com.facebook.widget;
 
-//import android.annotation.SuppressLint; //TITANIUM
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.res.TypedArray;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import com.facebook.*;
 import com.facebook.internal.Utility;
+import com.facebook.AppEventsLogger;
+import com.facebook.FacebookException;
+import com.facebook.Request;
+import com.facebook.Session;
+import com.facebook.internal.AnalyticsEvents;
 import com.facebook.model.GraphUser;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Provides a Fragment that displays a list of a user's friends and allows one or more of the
@@ -73,6 +55,8 @@ public class FriendPickerFragment extends PickerFragment<GraphUser> {
 
     private boolean multiSelect = true;
 
+    private List<String> preSelectedFriendIds = new ArrayList<String>();
+
     /**
      * Default constructor. Creates a Fragment with all default properties.
      */
@@ -85,14 +69,12 @@ public class FriendPickerFragment extends PickerFragment<GraphUser> {
      * @param args  a Bundle that optionally contains one or more values containing additional
      *              configuration information for the Fragment.
      */
-    // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-    // Comment out @SuppressLint since it is only for API 16+.
-    //@SuppressLint("ValidFragment")
+    @SuppressLint("ValidFragment")
     public FriendPickerFragment(Bundle args) {
-    	// *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
         //super(GraphUser.class, R.layout.com_facebook_friendpickerfragment, args);
-    	super(GraphUser.class, Utility.resId_friendPickerFragment, args);
-    	setFriendPickerSettingsFromBundle(args);
+        super(GraphUser.class, Utility.resId_friendPickerFragment, args);
+        setFriendPickerSettingsFromBundle(args);
     }
 
     /**
@@ -133,6 +115,42 @@ public class FriendPickerFragment extends PickerFragment<GraphUser> {
     }
 
     /**
+     * Sets the list of friends for pre selection. These friends will be selected by default.
+     * @param userIds list of friends as ids
+     */
+    public void setSelectionByIds(List<String> userIds) {
+        preSelectedFriendIds.addAll(userIds);
+    }
+
+    /**
+     * Sets the list of friends for pre selection. These friends will be selected by default.
+     * @param userIds list of friends as ids
+     */
+    public void setSelectionByIds(String... userIds) {
+        setSelectionByIds(Arrays.asList(userIds));
+    }
+
+    /**
+     * Sets the list of friends for pre selection. These friends will be selected by default.
+     * @param graphUsers list of friends as GraphUsers
+     */
+    public void setSelection(GraphUser... graphUsers) {
+        setSelection(Arrays.asList(graphUsers));
+    }
+
+    /**
+     * Sets the list of friends for pre selection. These friends will be selected by default.
+     * @param graphUsers list of friends as GraphUsers
+     */
+    public void setSelection(List<GraphUser> graphUsers) {
+        List<String> userIds = new ArrayList<String>();
+        for(GraphUser graphUser: graphUsers) {
+            userIds.add(graphUser.getId());
+        }
+        setSelectionByIds(userIds);
+    }
+
+    /**
      * Gets the currently-selected list of users.
      * @return the currently-selected list of users
      */
@@ -147,7 +165,7 @@ public class FriendPickerFragment extends PickerFragment<GraphUser> {
         //TypedArray a = activity.obtainStyledAttributes(attrs, R.styleable.com_facebook_friend_picker_fragment);
 
         //setMultiSelect(a.getBoolean(R.styleable.com_facebook_friend_picker_fragment_multi_select, multiSelect));
-        
+
         TypedArray a = activity.obtainStyledAttributes(attrs, getResources().getIntArray(Utility.resId_friendPickerFragmentStyleable));
         setMultiSelect(a.getBoolean(Utility.resId_friendPickerFragmentMultiSelect, multiSelect));
         a.recycle();
@@ -172,16 +190,16 @@ public class FriendPickerFragment extends PickerFragment<GraphUser> {
 
             @Override
             protected int getGraphObjectRowLayoutId(GraphUser graphObject) {
-            	// *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-            	//return R.layout.com_facebook_picker_list_row;
-            	return Utility.resId_pickerListRow;
+                // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+                //return R.layout.com_facebook_picker_list_row;
+                return Utility.resId_pickerListRow;
             }
 
             @Override
             protected int getDefaultPicture() {
-            	// *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+                // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
                 //return R.drawable.com_facebook_profile_default_icon;
-            	return Utility.resId_profileDefaultIcon;
+                return Utility.resId_profileDefaultIcon;
             }
 
         };
@@ -215,9 +233,31 @@ public class FriendPickerFragment extends PickerFragment<GraphUser> {
 
     @Override
     String getDefaultTitleText() {
-    	// *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
         //return getString(R.string.com_facebook_choose_friends);
-    	return getString(Utility.resId_chooseFriends); // TITANIUM
+        return getString(Utility.resId_chooseFriends); // TITANIUM
+    }
+
+    @Override
+    void logAppEvents(boolean doneButtonClicked) {
+        AppEventsLogger logger = AppEventsLogger.newLogger(this.getActivity(), getSession());
+        Bundle parameters = new Bundle();
+
+        // If Done was clicked, we know this completed successfully. If not, we don't know (caller might have
+        // dismissed us in response to selection changing, or user might have hit back button). Either way
+        // we'll log the number of selections.
+        String outcome = doneButtonClicked ? AnalyticsEvents.PARAMETER_DIALOG_OUTCOME_VALUE_COMPLETED :
+                AnalyticsEvents.PARAMETER_DIALOG_OUTCOME_VALUE_UNKNOWN;
+        parameters.putString(AnalyticsEvents.PARAMETER_DIALOG_OUTCOME, outcome);
+        parameters.putInt("num_friends_picked", getSelection().size());
+
+        logger.logSdkEvent(AnalyticsEvents.EVENT_FRIEND_PICKER_USAGE, null, parameters);
+    }
+
+    @Override
+    public void loadData(boolean forceReload) {
+        super.loadData(forceReload);
+        setSelectedGraphObjects(preSelectedFriendIds);
     }
 
     private Request createRequest(String userID, Set<String> extraFields, Session session) {

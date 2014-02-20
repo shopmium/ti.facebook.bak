@@ -1,5 +1,5 @@
 /**
- * Copyright 2012 Facebook
+ * Copyright 2010-present Facebook.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,37 +14,16 @@
  * limitations under the License.
  */
 
-/**
- * MODIFICATIONS
- * 
- * Facebook Module
- * Copyright (c) 2009-2013 by Appcelerator, Inc. All Rights Reserved.
- * Please see the LICENSE included with this distribution for details.
- */
-
-/**
- * NOTES
- * Modifications made for Titanium:
- * - In LoginButton(Context, AttributeSet), parseAttributes() and onClick(), fetch 
- * 	resource ids using Resources.getIdentifier.
- * 
- * Original file this is based on:
- * https://github.com/facebook/facebook-android-sdk/blob/4e2e6b90fbc964ca51a81e83e802bb4a62711a78/facebook/src/com/facebook/widget/LoginButton.java
- */
-
-
 package com.facebook.widget;
-
-import java.util.Collections;
-import java.util.List;
 
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.content.res.TypedArray;
+import android.graphics.Typeface;
+import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -52,18 +31,16 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
-
-import com.facebook.FacebookException;
-import com.facebook.Request;
-import com.facebook.Response;
-import com.facebook.Session;
-import com.facebook.SessionDefaultAudience;
-import com.facebook.SessionLoginBehavior;
-import com.facebook.SessionState;
+import com.facebook.*;
+import com.facebook.internal.AnalyticsEvents;
+import com.facebook.model.GraphUser;
 import com.facebook.internal.SessionAuthorizationType;
 import com.facebook.internal.SessionTracker;
 import com.facebook.internal.Utility;
-import com.facebook.model.GraphUser;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * A Log In/Log Out button that maintains session state and logs
@@ -90,6 +67,7 @@ public class LoginButton extends Button {
     private UserInfoChangedCallback userInfoChangedCallback;
     private Fragment parentFragment;
     private LoginButtonProperties properties = new LoginButtonProperties();
+    private String loginLogoutEventName = AnalyticsEvents.EVENT_LOGIN_VIEW_USAGE;
 
     static class LoginButtonProperties {
         private SessionDefaultAudience defaultAudience = SessionDefaultAudience.FRIENDS;
@@ -224,46 +202,51 @@ public class LoginButton extends Button {
         super(context, attrs);
 
         if (attrs.getStyleAttribute() == 0) {
-			// apparently there's no method of setting a default style in xml,
-			// so in case the users do not explicitly specify a style, we need
-			// to use sensible defaults.
-        	// *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-//        	if (Utility.resId_loginViewTextColor == -1) {
-//        		Utility.resId_loginViewTextColor = Utility.getResourceId(context, "com_facebook_loginview_text_color", "color");
-//        	}
-//        	if (Utility.resId_loginViewTextSize == -1) {
-//        		Utility.resId_loginViewTextSize = Utility.getResourceId(context, "com_facebook_loginview_text_size", "dimen");
-//        	}
-//        	if (Utility.resId_loginViewHeight == -1) {
-//        		Utility.resId_loginViewHeight = Utility.getResourceId(context, "com_facebook_loginview_height", "dimen");
-//        	}
-//        	if (Utility.resId_loginViewWidth == -1) {
-//        		Utility.resId_loginViewWidth = Utility.getResourceId(context, "com_facebook_loginview_width", "dimen");
-//        	}
-        	this.setTextColor(getResources().getColor(Utility.resId_loginViewTextColor));
-			this.setTextSize(TypedValue.COMPLEX_UNIT_PX,
-				getResources().getDimension(Utility.resId_loginViewTextSize));
-			 this.setPadding(getResources().getDimensionPixelSize(Utility.resId_loginViewPaddingLeft),
-			 getResources().getDimensionPixelSize(Utility.resId_loginViewPaddingTop),
-			 getResources().getDimensionPixelSize(Utility.resId_loginViewPaddingRight),
-			 getResources().getDimensionPixelSize(Utility.resId_loginViewPaddingBottom));
-			this.setWidth(getResources().getDimensionPixelSize(Utility.resId_loginViewWidth));
-			this.setHeight(getResources().getDimensionPixelSize(Utility.resId_loginViewHeight));
-			this.setGravity(Gravity.CENTER);
+            // apparently there's no method of setting a default style in xml,
+            // so in case the users do not explicitly specify a style, we need
+            // to use sensible defaults.
+            this.setGravity(Gravity.CENTER);
+            // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+            //this.setTextColor(getResources().getColor(R.color.com_facebook_loginview_text_color));
+            //this.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                    //getResources().getDimension(R.dimen.com_facebook_loginview_text_size));
+            this.setTextColor(getResources().getColor(Utility.resId_loginViewTextColor));
+            this.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+               getResources().getDimension(Utility.resId_loginViewTextSize));
 
-            parseAttributes(attrs);
-            if(isInEditMode()) {
+           //this.setWidth(getResources().getDimensionPixelSize(Utility.resId_loginViewWidth));
+           //this.setHeight(getResources().getDimensionPixelSize(Utility.resId_loginViewHeight));
+
+            this.setTypeface(Typeface.DEFAULT_BOLD);
+            if (isInEditMode()) {
                 // cannot use a drawable in edit mode, so setting the background color instead
                 // of a background resource.
-            	//this.setBackgroundColor(getResources().getColor(R.color.com_facebook_blue));
-            	this.setBackgroundColor(getResources().getColor(Utility.resId_blueColor)); //TITANIUM
+                //this.setBackgroundColor(getResources().getColor(R.color.com_facebook_blue));
+                this.setBackgroundColor(getResources().getColor(Utility.resId_blueColor)); //TITANIUM
                 // hardcoding in edit mode as getResources().getString() doesn't seem to work in IntelliJ
-                loginText = "Log in";
+                loginText = "Log in with Facebook";
             } else {
-            	//this.setBackgroundResource(R.drawable.com_facebook_loginbutton_blue);
-            	this.setBackgroundResource(Utility.resId_loginButtonImage); //TITANIUM
-                initializeActiveSessionWithCachedToken(context);
+                //this.setBackgroundResource(R.drawable.com_facebook_button_blue);
+                //this.setCompoundDrawablesWithIntrinsicBounds(R.drawable.com_facebook_inverse_icon, 0, 0, 0);
+                //this.setCompoundDrawablePadding(
+                        //getResources().getDimensionPixelSize(R.dimen.com_facebook_loginview_compound_drawable_padding));
+                //this.setPadding(getResources().getDimensionPixelSize(R.dimen.com_facebook_loginview_padding_left),
+                        //getResources().getDimensionPixelSize(R.dimen.com_facebook_loginview_padding_top),
+                        //getResources().getDimensionPixelSize(R.dimen.com_facebook_loginview_padding_right),
+                        //getResources().getDimensionPixelSize(R.dimen.com_facebook_loginview_padding_bottom));
+                this.setBackgroundResource(Utility.resId_loginButtonImage); //TITANIUM
+                this.setCompoundDrawablesWithIntrinsicBounds(Utility.resId_inverseIcon, 0, 0, 0);
+                this.setCompoundDrawablePadding(
+                        getResources().getDimensionPixelSize(Utility.resId_loginviewCompoundPadding));
+                this.setPadding(getResources().getDimensionPixelSize(Utility.resId_loginViewPaddingLeft),
+                        getResources().getDimensionPixelSize(Utility.resId_loginViewPaddingTop),
+                        getResources().getDimensionPixelSize(Utility.resId_loginViewPaddingRight),
+                        getResources().getDimensionPixelSize(Utility.resId_loginViewPaddingBottom));
             }
+        }
+        parseAttributes(attrs);
+        if (!isInEditMode()) {
+            initializeActiveSessionWithCachedToken(context);
         }
     }
 
@@ -346,6 +329,32 @@ public class LoginButton extends Button {
 
     /**
      * Set the permissions to use when the session is opened. The permissions here
+     * can only be read permissions. If any publish permissions are included, the login
+     * attempt by the user will fail. The LoginButton can only be associated with either
+     * read permissions or publish permissions, but not both. Calling both
+     * setReadPermissions and setPublishPermissions on the same instance of LoginButton
+     * will result in an exception being thrown unless clearPermissions is called in between.
+     * <p/>
+     * This method is only meaningful if called before the session is open. If this is called
+     * after the session is opened, and the list of permissions passed in is not a subset
+     * of the permissions granted during the authorization, it will log an error.
+     * <p/>
+     * Since the session can be automatically opened when the LoginButton is constructed,
+     * it's important to always pass in a consistent set of permissions to this method, or
+     * manage the setting of permissions outside of the LoginButton class altogether
+     * (by managing the session explicitly).
+     *
+     * @param permissions the read permissions to use
+     *
+     * @throws UnsupportedOperationException if setPublishPermissions has been called
+     */
+    public void setReadPermissions(String... permissions) {
+        properties.setReadPermissions(Arrays.asList(permissions), sessionTracker.getSession());
+    }
+
+
+    /**
+     * Set the permissions to use when the session is opened. The permissions here
      * should only be publish permissions. If any read permissions are included, the login
      * attempt by the user may fail. The LoginButton can only be associated with either
      * read permissions or publish permissions, but not both. Calling both
@@ -368,6 +377,32 @@ public class LoginButton extends Button {
      */
     public void setPublishPermissions(List<String> permissions) {
         properties.setPublishPermissions(permissions, sessionTracker.getSession());
+    }
+
+    /**
+     * Set the permissions to use when the session is opened. The permissions here
+     * should only be publish permissions. If any read permissions are included, the login
+     * attempt by the user may fail. The LoginButton can only be associated with either
+     * read permissions or publish permissions, but not both. Calling both
+     * setReadPermissions and setPublishPermissions on the same instance of LoginButton
+     * will result in an exception being thrown unless clearPermissions is called in between.
+     * <p/>
+     * This method is only meaningful if called before the session is open. If this is called
+     * after the session is opened, and the list of permissions passed in is not a subset
+     * of the permissions granted during the authorization, it will log an error.
+     * <p/>
+     * Since the session can be automatically opened when the LoginButton is constructed,
+     * it's important to always pass in a consistent set of permissions to this method, or
+     * manage the setting of permissions outside of the LoginButton class altogether
+     * (by managing the session explicitly).
+     *
+     * @param permissions the read permissions to use
+     *
+     * @throws UnsupportedOperationException if setReadPermissions has been called
+     * @throws IllegalArgumentException if permissions is null or empty
+     */
+    public void setPublishPermissions(String... permissions) {
+        properties.setPublishPermissions(Arrays.asList(permissions), sessionTracker.getSession());
     }
 
 
@@ -555,34 +590,39 @@ public class LoginButton extends Button {
         this.properties = properties;
     }
 
+    void setLoginLogoutEventName(String eventName) {
+        loginLogoutEventName = eventName;
+    }
+
     private void parseAttributes(AttributeSet attrs) {
-    	// *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-//    	TypedArray a = getContext().obtainStyledAttributes(attrs, R.styleable.com_facebook_login_view);
-//        confirmLogout = a.getBoolean(R.styleable.com_facebook_login_view_confirm_logout, true);
-//        fetchUserInfo = a.getBoolean(R.styleable.com_facebook_login_view_fetch_user_info, true);
-//        loginText = a.getString(R.styleable.com_facebook_login_view_login_text);
-//        logoutText = a.getString(R.styleable.com_facebook_login_view_logout_text);
-//        a.recycle();
-    	TypedArray a = getContext().obtainStyledAttributes(attrs, getResources().getIntArray(Utility.resId_loginView));
-		confirmLogout = a.getBoolean(Utility.resId_loginViewConfirmLogout, true);
-		fetchUserInfo = a.getBoolean(Utility.resId_loginViewFetchUserInfo, true);
-		loginText = a.getString(Utility.resId_loginViewLoginText);
-		logoutText = a.getString(Utility.resId_loginViewLogoutText);
-		a.recycle();
+        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+        //TypedArray a = getContext().obtainStyledAttributes(attrs, R.styleable.com_facebook_login_view);
+        //confirmLogout = a.getBoolean(R.styleable.com_facebook_login_view_confirm_logout, true);
+        //fetchUserInfo = a.getBoolean(R.styleable.com_facebook_login_view_fetch_user_info, true);
+        //loginText = a.getString(R.styleable.com_facebook_login_view_login_text);
+        //logoutText = a.getString(R.styleable.com_facebook_login_view_logout_text);
+
+        TypedArray a = getContext().obtainStyledAttributes(attrs, getResources().getIntArray(Utility.resId_loginView));
+        confirmLogout = a.getBoolean(Utility.resId_loginViewConfirmLogout, true);
+        fetchUserInfo = a.getBoolean(Utility.resId_loginViewFetchUserInfo, true);
+        loginText = a.getString(Utility.resId_loginViewLoginText);
+        logoutText = a.getString(Utility.resId_loginViewLogoutText);
+
+        a.recycle();
     }
 
     private void setButtonText() {
         if (sessionTracker != null && sessionTracker.getOpenSession() != null) {
-        	// *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-//            setText((logoutText != null) ? logoutText :
-//                    getResources().getString(R.string.com_facebook_loginview_log_out_button));
-        	setText((logoutText != null) ? logoutText :
-                getResources().getString(Utility.resId_loginViewLogoutButton));
+            // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+            //setText((logoutText != null) ? logoutText :
+                    //getResources().getString(R.string.com_facebook_loginview_log_out_button));
+            setText((logoutText != null) ? logoutText :
+                    getResources().getString(Utility.resId_loginViewLogoutButton));
         } else {
-//            setText((loginText != null) ? loginText :
-//                    getResources().getString(R.string.com_facebook_loginview_log_in_button));
-        	setText((loginText != null) ? loginText :
-                getContext().getString(Utility.resId_loginViewLoginButton)); //TITANIUM
+            //setText((loginText != null) ? loginText :
+                    //getResources().getString(R.string.com_facebook_loginview_log_in_button));
+            setText((logoutText != null) ? logoutText :
+                    getResources().getString(Utility.resId_loginViewLoginButton));
         }
     }
 
@@ -641,14 +681,15 @@ public class LoginButton extends Button {
         public void onClick(View v) {
             Context context = getContext();
             final Session openSession = sessionTracker.getOpenSession();
+
             if (openSession != null) {
                 // If the Session is currently open, it must mean we need to log out
                 if (confirmLogout) {
                     // Create a confirmation dialog
-                	// *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-//                    String logout = getResources().getString(R.string.com_facebook_loginview_log_out_action);
-//                    String cancel = getResources().getString(R.string.com_facebook_loginview_cancel_action);
-                	String logout = getResources().getString(Utility.resId_loginViewLogoutAction);
+                    // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+                    //String logout = getResources().getString(R.string.com_facebook_loginview_log_out_action);
+                    //String cancel = getResources().getString(R.string.com_facebook_loginview_cancel_action);
+                    String logout = getResources().getString(Utility.resId_loginViewLogoutAction);
                     String cancel = getResources().getString(Utility.resId_loginViewCancelAction);
                     String message;
                     if (user != null && user.getName() != null) {
@@ -700,6 +741,13 @@ public class LoginButton extends Button {
                     }
                 }
             }
+
+            AppEventsLogger logger = AppEventsLogger.newLogger(getContext());
+
+            Bundle parameters = new Bundle();
+            parameters.putInt("logging_in", (openSession != null) ? 0 : 1);
+
+            logger.logSdkEvent(loginLogoutEventName, null, parameters);
         }
     }
 
@@ -709,12 +757,13 @@ public class LoginButton extends Button {
                          Exception exception) {
             fetchUserInfo();
             setButtonText();
-            if (exception != null) {
-                handleError(exception);
-            }
 
+            // if the client has a status callback registered, call it, otherwise
+            // call the default handleError method, but don't call both
             if (properties.sessionStatusCallback != null) {
                 properties.sessionStatusCallback.call(session, state, exception);
+            } else if (exception != null) {
+                handleError(exception);
             }
         }
     };

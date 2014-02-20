@@ -1,5 +1,5 @@
 /**
- * Copyright 2012 Facebook
+ * Copyright 2010-present Facebook.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,24 +14,6 @@
  * limitations under the License.
  */
 
-/**
- * MODIFICATIONS
- * 
- * Facebook Module
- * Copyright (c) 2009-2013 by Appcelerator, Inc. All Rights Reserved.
- * Please see the LICENSE included with this distribution for details.
- */
-
-/**
- * NOTES
- * Modifications made for Titanium:
- * - In onCreate(), onBackgroundProcessingStarted(), onBackgroundProcessingStopped and
- * 	onPause(), fetch resource ids using Resources.getIdentifier.
- * 
- * Original file this is based on:
- * https://github.com/facebook/facebook-android-sdk/blob/4e2e6b90fbc964ca51a81e83e802bb4a62711a78/facebook/src/com/facebook/LoginActivity.java
- */
-
 package com.facebook;
 
 import com.facebook.internal.Utility;
@@ -39,8 +21,8 @@ import com.facebook.internal.Utility;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
-
 
 /**
  * This Activity is a necessary part of the overall Facebook login process
@@ -58,6 +40,7 @@ import android.view.View;
 public class LoginActivity extends Activity {
     static final String RESULT_KEY = "com.facebook.LoginActivity:Result";
 
+    private static final String TAG = LoginActivity.class.getName();
     private static final String NULL_CALLING_PKG_ERROR_MSG =
             "Cannot call LoginActivity with a null calling package. " +
                     "This can occur if the launchMode of the caller is singleInstance.";
@@ -72,7 +55,7 @@ public class LoginActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+
         // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
         //setContentView(R.layout.com_facebook_login_activity_layout);
         setContentView(Utility.resId_loginActivityLayout);
@@ -96,15 +79,15 @@ public class LoginActivity extends Activity {
         authorizationClient.setBackgroundProcessingListener(new AuthorizationClient.BackgroundProcessingListener() {
             @Override
             public void onBackgroundProcessingStarted() {
-            	// *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+                // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
                 //findViewById(R.id.com_facebook_login_activity_progress_bar).setVisibility(View.VISIBLE);
-            	findViewById(Utility.resId_loginActivityProgressBar).setVisibility(View.VISIBLE);
+                findViewById(Utility.resId_loginActivityProgressBar).setVisibility(View.VISIBLE);
             }
 
             @Override
             public void onBackgroundProcessingStopped() {
                 //findViewById(R.id.com_facebook_login_activity_progress_bar).setVisibility(View.GONE);
-            	findViewById(Utility.resId_loginActivityProgressBar).setVisibility(View.GONE);
+                findViewById(Utility.resId_loginActivityProgressBar).setVisibility(View.GONE);
             }
         });
     }
@@ -131,9 +114,11 @@ public class LoginActivity extends Activity {
 
         // If the calling package is null, this generally means that the callee was started
         // with a launchMode of singleInstance. Unfortunately, Android does not allow a result
-        // to be set when the callee is a singleInstance, so we throw an exception here.
+        // to be set when the callee is a singleInstance, so we log an error and return.
         if (callingPackage == null) {
-            throw new FacebookException(NULL_CALLING_PKG_ERROR_MSG);
+            Log.e(TAG, NULL_CALLING_PKG_ERROR_MSG);
+            finish();
+            return;
         }
 
         authorizationClient.startOrContinueAuth(request);

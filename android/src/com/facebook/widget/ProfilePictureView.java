@@ -1,5 +1,5 @@
 /**
- * Copyright 2012 Facebook
+ * Copyright 2010-present Facebook.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,26 +14,7 @@
  * limitations under the License.
  */
 
-/**
- * MODIFICATIONS
- * 
- * Facebook Module
- * Copyright (c) 2009-2013 by Appcelerator, Inc. All Rights Reserved.
- * Please see the LICENSE included with this distribution for details.
- */
-
-/**
- * NOTES
- * Modifications made for Titanium:
- * - In parseAttributes(), setBlankProfilePicture() and getPresetSizeInPixels(), fetch resource ids using Resources.getIdentifier.
- * 
- * Original file this is based on:
- * https://github.com/facebook/facebook-android-sdk/blob/4e2e6b90fbc964ca51a81e83e802bb4a62711a78/facebook/src/com/facebook/widget/ProfilePictureView.java
- */
-
 package com.facebook.widget;
-
-import java.net.MalformedURLException;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -46,11 +27,12 @@ import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-
 import com.facebook.FacebookException;
 import com.facebook.LoggingBehavior;
-import com.facebook.internal.Logger;
 import com.facebook.internal.Utility;
+import com.facebook.internal.*;
+
+import java.net.URISyntaxException;
 
 /**
  * View that displays the profile photo of a supplied profile ID, while conforming
@@ -128,6 +110,7 @@ public class ProfilePictureView extends FrameLayout {
     private int presetSizeType = CUSTOM;
     private ImageRequest lastRequest;
     private OnErrorListener onErrorListener;
+    private Bitmap customizedDefaultProfilePicture = null;
 
     /**
      * Constructor
@@ -257,10 +240,20 @@ public class ProfilePictureView extends FrameLayout {
      * Sets an OnErrorListener for this instance of ProfilePictureView to call into when
      * certain exceptions occur.
      *
-     * @param onErrorListener The listener object to set
+     * @param onErrorListener The Listener object to set
      */
     public final void setOnErrorListener(OnErrorListener onErrorListener) {
-        this.onErrorListener = onErrorListener;
+      this.onErrorListener = onErrorListener;
+    }
+
+    /**
+     * The ProfilePictureView will display the provided image while the specified
+     * profile is being loaded, or if the specified profile is not available.
+     *
+     * @param inputBitmap The bitmap to render until the actual profile is loaded.
+     */
+    public final void setDefaultProfilePicture(Bitmap inputBitmap) {
+        customizedDefaultProfilePicture = inputBitmap;
     }
 
     /**
@@ -389,15 +382,14 @@ public class ProfilePictureView extends FrameLayout {
     }
 
     private void parseAttributes(AttributeSet attrs) {
-    	// *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-//        TypedArray a = getContext().obtainStyledAttributes(attrs, R.styleable.com_facebook_profile_picture_view);
-//        setPresetSize(a.getInt(R.styleable.com_facebook_profile_picture_view_preset_size, CUSTOM));
-//        isCropped = a.getBoolean(R.styleable.com_facebook_profile_picture_view_is_cropped, IS_CROPPED_DEFAULT_VALUE);
-//        a.recycle();
-		TypedArray a = getContext().obtainStyledAttributes(attrs, getResources().getIntArray(Utility.resId_profilePictureView));
-		setPresetSize(a.getInt(Utility.resId_profilePicturePresetSize, CUSTOM));
-		isCropped = a.getBoolean(Utility.resId_profilePictureIsCropped, IS_CROPPED_DEFAULT_VALUE);
-		a.recycle();
+        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+        //TypedArray a = getContext().obtainStyledAttributes(attrs, R.styleable.com_facebook_profile_picture_view);
+        //setPresetSize(a.getInt(R.styleable.com_facebook_profile_picture_view_preset_size, CUSTOM));
+        //isCropped = a.getBoolean(R.styleable.com_facebook_profile_picture_view_is_cropped, IS_CROPPED_DEFAULT_VALUE);
+        TypedArray a = getContext().obtainStyledAttributes(attrs, getResources().getIntArray(Utility.resId_profilePictureView));
+        setPresetSize(a.getInt(Utility.resId_profilePicturePresetSize, CUSTOM));
+        isCropped = a.getBoolean(Utility.resId_profilePictureIsCropped, IS_CROPPED_DEFAULT_VALUE);
+        a.recycle();
     }
 
     private void refreshImage(boolean force) {
@@ -414,14 +406,19 @@ public class ProfilePictureView extends FrameLayout {
     }
 
     private void setBlankProfilePicture() {
-    	// *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-//        int blankImageResource = isCropped() ?
-//                R.drawable.com_facebook_profile_picture_blank_square :
-//                R.drawable.com_facebook_profile_picture_blank_portrait;
-    	int blankImageResource = isCropped() ?
-            Utility.resId_profilePictureBlankSquare :
-            Utility.resId_profilePictureBlankPortrait;
-        setImageBitmap( BitmapFactory.decodeResource(getResources(), blankImageResource));
+        if (customizedDefaultProfilePicture == null) {
+          // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+          int blankImageResource = isCropped() ?
+                Utility.resId_profilePictureBlankSquare :
+                Utility.resId_profilePictureBlankPortrait;
+          setImageBitmap( BitmapFactory.decodeResource(getResources(), blankImageResource));
+	} else {
+          // Update profile image dimensions.
+          updateImageQueryParameters();
+          // Resize inputBitmap to new dimensions of queryWidth and queryHeight.
+          Bitmap scaledBitmap = Bitmap.createScaledBitmap(customizedDefaultProfilePicture, queryWidth, queryHeight, false);
+          setImageBitmap(scaledBitmap);
+	}
     }
 
     private void setImageBitmap(Bitmap imageBitmap) {
@@ -457,7 +454,7 @@ public class ProfilePictureView extends FrameLayout {
             lastRequest = request;
 
             ImageDownloader.downloadAsync(request);
-        } catch (MalformedURLException e) {
+        } catch (URISyntaxException e) {
             Logger.log(LoggingBehavior.REQUESTS, Log.ERROR, TAG, e.toString());
         }
     }
@@ -522,16 +519,16 @@ public class ProfilePictureView extends FrameLayout {
         int dimensionId;
         switch (presetSizeType) {
             case SMALL:
-            	// *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+                // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
                 //dimensionId = R.dimen.com_facebook_profilepictureview_preset_size_small;
-            	dimensionId = Utility.resId_profilePictureSmall;
+                dimensionId = Utility.resId_profilePictureSmall;
                 break;
             case NORMAL:
                 //dimensionId = R.dimen.com_facebook_profilepictureview_preset_size_normal;
                 dimensionId = Utility.resId_profilePictureNormal; //TITANIUM
                 break;
             case LARGE:
-                //dimensionId = R.dimen.com_facebook_profilepictureview_preset_size_large;
+                //dimensionId = R.dimen.com_facebook_profilepictureview_preset_size_large
                 dimensionId = Utility.resId_profilePictureLarge; //TITANIUM
                 break;
             case CUSTOM:
@@ -539,7 +536,7 @@ public class ProfilePictureView extends FrameLayout {
                     return ImageRequest.UNSPECIFIED_DIMENSION;
                 } else {
                     //dimensionId = R.dimen.com_facebook_profilepictureview_preset_size_normal;
-                	dimensionId = Utility.resId_profilePictureNormal; //TITANIUM
+                    dimensionId = Utility.resId_profilePictureNormal; //TITANIUM
                     break;
                 }
             default:

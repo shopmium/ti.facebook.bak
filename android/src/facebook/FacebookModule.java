@@ -53,7 +53,7 @@ public class FacebookModule extends KrollModule
 
     @Kroll.constant public static final int BUTTON_STYLE_NORMAL = 0;
     @Kroll.constant public static final int BUTTON_STYLE_WIDE = 1;
-    
+
     public static final String EVENT_LOGIN = "login";
     public static final String EVENT_LOGOUT = "logout";
     public static final String PROPERTY_SUCCESS = "success";
@@ -81,7 +81,6 @@ public class FacebookModule extends KrollModule
 	public FacebookModule()
 	{
 		super();
-		Utility.setLogEnabled(Log.isDebugModeEnabled());
 		Utility.loadResourceIds(TiApplication.getInstance());
 		sessionListener = new SessionListener(this);
 		SessionEvents.addAuthListener(sessionListener);
@@ -412,8 +411,9 @@ public class FacebookModule extends KrollModule
 				Log.e(TAG, e.getLocalizedMessage(), e);
 			}
 		};
-		
+
 		if (TiApplication.isUIThread()) {
+			//facebook.authorize(activity, permissions, activityCode, new LoginDialogListener());
 			facebook.authorize(activity, activitySupport, permissions, activityCode, new LoginDialogListener(), resultHandler);
 		} else {
 			final int code = activityCode;
@@ -421,6 +421,7 @@ public class FacebookModule extends KrollModule
 				@Override
 				public void run()
 				{
+					//facebook.authorize(activity, permissions, code, new LoginDialogListener());
 					facebook.authorize(activity, activitySupport, permissions, code, new LoginDialogListener(), resultHandler);
 				}
 			});
