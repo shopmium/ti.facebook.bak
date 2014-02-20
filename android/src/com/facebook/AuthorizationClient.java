@@ -14,6 +14,24 @@
  * limitations under the License.
  */
 
+
+/**
+  * MODIFICATIONS
+  *
+  * Facebook Module
+  * Copyright (c) 2009-2013 by Appcelerator, Inc. All Rights Reserved.
+  * Please see the LICENSE included with this distribution for details.
+  */
+
+ /**
+  * NOTES
+  * Modifications made for Titanium:
+  * - In checkInternetPermission(), fetch resource ids using Resources.getIdentifier.
+  *
+  * Original file this is based on:
+  * https://github.com/facebook/facebook-android-sdk/blob/4e2e6b90fbc964ca51a81e83e802bb4a62711a78/facebook/src/com/facebook/AuthorizationClient.java
+  */
+
 package com.facebook;
 
 import android.Manifest;

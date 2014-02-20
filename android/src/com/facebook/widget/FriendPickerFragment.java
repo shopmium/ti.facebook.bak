@@ -16,7 +16,7 @@
 
 package com.facebook.widget;
 
-import android.annotation.SuppressLint;
+//import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.res.TypedArray;
 import android.os.Bundle;
@@ -69,7 +69,9 @@ public class FriendPickerFragment extends PickerFragment<GraphUser> {
      * @param args  a Bundle that optionally contains one or more values containing additional
      *              configuration information for the Fragment.
      */
-    @SuppressLint("ValidFragment")
+    // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+    // Comment out @SuppressLint since it is only for API 16+
+    //@SuppressLint("ValidFragment")
     public FriendPickerFragment(Bundle args) {
         // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
         //super(GraphUser.class, R.layout.com_facebook_friendpickerfragment, args);

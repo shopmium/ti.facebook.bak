@@ -16,7 +16,7 @@
 
 package com.facebook.widget;
 
-import android.annotation.SuppressLint;
+//import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -200,6 +200,7 @@ public class WebDialog extends Dialog {
 
         spinner = new ProgressDialog(getContext());
         spinner.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
         //spinner.setMessage(getContext().getString(R.string.com_facebook_loading));
         spinner.setMessage(getContext().getString(Utility.resId_loading));
         spinner.setOnCancelListener(new OnCancelListener() {
@@ -322,6 +323,7 @@ public class WebDialog extends Dialog {
                 WebDialog.this.dismiss();
             }
         });
+        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
         //Drawable crossDrawable = getContext().getResources().getDrawable(R.drawable.com_facebook_close);
         Drawable crossDrawable = getContext().getResources().getDrawable(Utility.resId_close);
         crossImageView.setImageDrawable(crossDrawable);
@@ -330,8 +332,9 @@ public class WebDialog extends Dialog {
          */
         crossImageView.setVisibility(View.INVISIBLE);
     }
-
-    @SuppressLint("SetJavaScriptEnabled")
+    // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+    // Comment out @SuppressLint since it is only for API 16+
+    //@SuppressLint("SetJavaScriptEnabled")
     private void setUpWebView(int margin) {
         LinearLayout webViewContainer = new LinearLayout(getContext());
         webView = new WebView(getContext());

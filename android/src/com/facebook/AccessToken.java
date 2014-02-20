@@ -14,9 +14,25 @@
  * limitations under the License.
  */
 
+/**
+  * MODIFICATIONS
+  *
+ * Facebook Module
+  * Copyright (c) 2009-2013 by Appcelerator, Inc. All Rights Reserved.
+  * Please see the LICENSE included with this distribution for details.
+  */
+
+ /**
+  * NOTES
+  * Modifications mad for Titanium:
+  * - Don't use android.annotation.SuppressLint since it is only for API 16+.
+  *
+  * Original file this is based on:
+  * https://github.cm/facebook/facebook-android-sdk/blob/4e2e6b90fbc964ca51a81e83e802bb4a62711a78/facebook/src/com/facebook/AccessToken.java
+  */
 package com.facebook;
 
-import android.annotation.SuppressLint;
+//import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -206,8 +222,9 @@ public final class AccessToken implements Serializable {
 
         return createNew(requestedPermissions, token, expires, source);
     }
-
-    @SuppressLint("FieldGetter")
+    // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+    // Comment out @SuppressLint since it is only for API 16+
+    //@SuppressLint("FieldGetter")
     static AccessToken createFromRefresh(AccessToken current, Bundle bundle) {
         // Only tokens obtained via SSO support refresh. Token refresh returns the expiration date in
         // seconds from the epoch rather than seconds from now.
