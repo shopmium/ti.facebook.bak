@@ -427,8 +427,8 @@ public final class Settings {
             if (e.getMessage() != null && !e.getMessage().isEmpty()) {
                 // if there was an error, fall through to the failure case.
                 Utility.logd("Facebook-publish", e.getMessage());
-                return new Response(null, null, new FacebookRequestError(null, e));
             }
+            return new Response(null, null, new FacebookRequestError(null, e));
         }
     }
 
