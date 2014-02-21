@@ -6,7 +6,5 @@ android/libs/*
 
 android/dist/facebook.jar
 
-android/build.xml
-
 android/build.properties
 
