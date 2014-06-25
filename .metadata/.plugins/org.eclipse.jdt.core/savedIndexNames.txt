@@ -1,0 +1,2 @@
+INDEX VERSION 1.126+/Users/antoineflinois/Dev/sdk-android/ti.facebook/.metadata/.plugins/org.eclipse.jdt.core
+1252312768.index

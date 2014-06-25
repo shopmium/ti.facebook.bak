@@ -1,18 +1,18 @@
 /**
- * Copyright 2010-present Facebook.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+* Copyright 2010-present Facebook.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 
 package com.facebook.internal;
 
@@ -35,6 +35,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
+import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -45,10 +47,10 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * com.facebook.internal is solely for the use of other packages within the Facebook SDK for Android. Use of
- * any of the classes in this package is unsupported, and they may be modified or removed without warning at
- * any time.
- */
+* com.facebook.internal is solely for the use of other packages within the Facebook SDK for Android. Use of
+* any of the classes in this package is unsupported, and they may be modified or removed without warning at
+* any time.
+*/
 public final class Utility {
     static final String LOG_TAG = "FacebookSDK";
     private static final String HASH_ALGORITHM_MD5 = "MD5";
@@ -56,9 +58,13 @@ public final class Utility {
     private static final String URL_SCHEME = "https";
     private static final String SUPPORTS_ATTRIBUTION = "supports_attribution";
     private static final String SUPPORTS_IMPLICIT_SDK_LOGGING = "supports_implicit_sdk_logging";
+    private static final String NUX_CONTENT = "gdpv4_nux_content";
+    private static final String NUX_ENABLED = "gdpv4_nux_enabled";
     private static final String [] APP_SETTING_FIELDS = new String[] {
             SUPPORTS_ATTRIBUTION,
-            SUPPORTS_IMPLICIT_SDK_LOGGING
+            SUPPORTS_IMPLICIT_SDK_LOGGING,
+            NUX_CONTENT,
+            NUX_ENABLED
     };
     private static final String APPLICATION_FIELDS = "fields";
 
@@ -69,12 +75,19 @@ public final class Utility {
             new ConcurrentHashMap<String, FetchedAppSettings>();
 
     public static class FetchedAppSettings {
-        private boolean supportsAttribution;
+         private boolean supportsAttribution;
         private boolean supportsImplicitLogging;
+        private String nuxContent;
+        private boolean nuxEnabled;
 
-        private FetchedAppSettings(boolean supportsAttribution, boolean supportsImplicitLogging) {
+        private FetchedAppSettings(boolean supportsAttribution,
+                                   boolean supportsImplicitLogging,
+                                   String nuxContent,
+                                   boolean nuxEnabled) {
             this.supportsAttribution = supportsAttribution;
             this.supportsImplicitLogging = supportsImplicitLogging;
+            this.nuxContent = nuxContent;
+            this.nuxEnabled = nuxEnabled;
         }
 
         public boolean supportsAttribution() {
@@ -83,6 +96,14 @@ public final class Utility {
 
         public boolean supportsImplicitLogging() {
             return supportsImplicitLogging;
+        }
+
+        public String getNuxContent() {
+            return nuxContent;
+        }
+
+        public boolean getNuxEnabled() {
+            return nuxEnabled;
         }
     }
 
@@ -183,6 +204,27 @@ public final class Utility {
     public static int resId_userSettingsFragmentProfilePictureHeight = -1;
     public static int resId_userSettingsFragmentProfilePictureWidth = -1;
 
+    //Variables from toolTipPopup
+    public static int resId_toolTipBubbleViewTextBody = -1;
+    public static int resId_toolTipBlueBackground = -1;
+    public static int resId_toolTipBlueBottomNub = -1;
+    public static int resId_toolTipBlueTopNub = -1;
+    public static int resId_toolTipBlueXout = -1;
+    public static int resId_toolTipBlackBackground = -1;
+    public static int resId_toolTipBlackBottomNub = -1;
+    public static int resId_toolTipBlackTopNub = -1;
+    public static int resId_toolTipBlackXout = -1;
+    public static int resId_toolTipBubble = -1;
+    public static int resId_toolTipBubbleViewTop = -1;
+    public static int resId_toolTipBubbleViewBottom = -1;
+    public static int resId_toolTipBodyFrame = -1;
+    public static int resId_toolTipButtonXout = -1;
+    public static int resId_toolTipDefault = -1;
+
+    //Variables from webDialog
+
+
+
     // Returns true iff all items in subset are in superset, treating null and
     // empty collections as
     // the same.
@@ -228,15 +270,26 @@ public final class Utility {
         return hashWithAlgorithm(HASH_ALGORITHM_SHA1, key);
     }
 
+    static String sha1hash(byte[] bytes) {
+        return hashWithAlgorithm(HASH_ALGORITHM_SHA1, bytes);
+    }
+
     private static String hashWithAlgorithm(String algorithm, String key) {
-        MessageDigest hash = null;
+        return hashWithAlgorithm(algorithm, key.getBytes());
+    }
+
+    private static String hashWithAlgorithm(String algorithm, byte[] bytes) {
+        MessageDigest hash;
         try {
             hash = MessageDigest.getInstance(algorithm);
         } catch (NoSuchAlgorithmException e) {
             return null;
         }
+        return hashBytes(hash, bytes);
+    }
 
-        hash.update(key.getBytes());
+    private static String hashBytes(MessageDigest hash, byte[] bytes) {
+        hash.update(bytes);
         byte[] digest = hash.digest();
         StringBuilder builder = new StringBuilder();
         for (int b : digest) {
@@ -457,11 +510,25 @@ public final class Utility {
         GraphObject supportResponse = request.executeAndWait().getGraphObject();
         FetchedAppSettings result = new FetchedAppSettings(
                 safeGetBooleanFromResponse(supportResponse, SUPPORTS_ATTRIBUTION),
-                safeGetBooleanFromResponse(supportResponse, SUPPORTS_IMPLICIT_SDK_LOGGING));
+                safeGetBooleanFromResponse(supportResponse, SUPPORTS_IMPLICIT_SDK_LOGGING),
+                safeGetStringFromResponse(supportResponse, NUX_CONTENT),
+                safeGetBooleanFromResponse(supportResponse, NUX_ENABLED)
+                );
 
         fetchedAppSettings.put(applicationId, result);
 
         return result;
+    }
+
+    private static String safeGetStringFromResponse(GraphObject response, String propertyName) {
+        Object result = "";
+        if (response != null) {
+            result = response.getProperty(propertyName);
+        }
+        if (!(result instanceof String)) {
+            result = "";
+        }
+        return (String) result;
     }
 
     private static boolean safeGetBooleanFromResponse(GraphObject response, String propertyName) {
@@ -594,10 +661,28 @@ public final class Utility {
        resId_userSettingsFragmentProfileName = resources.getIdentifier("com_facebook_usersettingsfragment_profile_name", "id", packageName);
        resId_userSettingsFragmentProfilePictureHeight = resources.getIdentifier("com_facebook_usersettingsfragment_profile_picture_height", "dimen", packageName);
        resId_userSettingsFragmentProfilePictureWidth = resources.getIdentifier("com_facebook_usersettingsfragment_profile_picture_width", "dimen", packageName);
+    //Variables from tooltipPopup
+       resId_toolTipBubbleViewTextBody = resources.getIdentifier("com_facebook_tooltip_bubble_view_text_body", "id", packageName);
+       resId_toolTipBlueBackground     = resources.getIdentifier("com_facebook_tooltip_blue_background", "drawable", packageName);
+       resId_toolTipBlueBottomNub      = resources.getIdentifier("com_facebook_tooltip_blue_bottomnub", "drawable", packageName);
+       resId_toolTipBlueTopNub         = resources.getIdentifier("com_facebook_tooltip_blue_topnub", "drawable", packageName);
+       resId_toolTipBlueXout           = resources.getIdentifier("com_facebook_tooltip_blue_xout", "drawable", packageName);
+       resId_toolTipBlackBackground    = resources.getIdentifier("com_facebook_tooltip_black_background", "drawable", packageName);
+       resId_toolTipBlackBottomNub     = resources.getIdentifier("com_facebook_tooltip_black_bottomnub", "drawable", packageName);
+       resId_toolTipBlackTopNub        = resources.getIdentifier("com_facebook_tooltip_black_topnub", "drawable", packageName);
+       resId_toolTipBlackXout          = resources.getIdentifier("com_facebook_tooltip_black_xout", "drawable", packageName);
+       resId_toolTipBubble             = resources.getIdentifier("com_facebook_tooltip_bubble", "layout", packageName);
+       resId_toolTipBubbleViewTop      = resources.getIdentifier("com_facebook_tooltip_bubble_view_top_pointer", "id", packageName);
+       resId_toolTipBubbleViewBottom   = resources.getIdentifier("com_facebook_tooltip_bubble_view_bottom_pointer", "id", packageName);
+       resId_toolTipBodyFrame          = resources.getIdentifier("com_facebook_body_frame", "id", packageName);
+       resId_toolTipButtonXout         = resources.getIdentifier("com_facebook_button_xout", "id", packageName);
+       resId_toolTipDefault            = resources.getIdentifier("com_facebook_tooltip_default", "id", packageName);
+    //Variables from WebDialog
+
    }
-    // Return a hash of the android_id combined with the appid.  Intended to dedupe requests on the server side
-    // in order to do counting of users unknown to Facebook.  Because we put the appid into the key prior to hashing,
-    // we cannot do correlation of the same user across multiple apps -- this is intentional.  When we transition to
+    // Return a hash of the android_id combined with the appid. Intended to dedupe requests on the server side
+    // in order to do counting of users unknown to Facebook. Because we put the appid into the key prior to hashing,
+    // we cannot do correlation of the same user across multiple apps -- this is intentional. When we transition to
     // the Google advertising ID, we'll get rid of this and always send that up.
     public static String getHashedDeviceAndAppID(Context context, String applicationId) {
         String androidId = Secure.getString(context.getContentResolver(), Secure.ANDROID_ID);
@@ -610,14 +695,47 @@ public final class Utility {
     }
 
     public static void setAppEventAttributionParameters(GraphObject params,
-            String attributionId, String hashedDeviceAndAppId, boolean limitEventUsage) {
+            AttributionIdentifiers attributionIdentifiers, String hashedDeviceAndAppId, boolean limitEventUsage) {
         // Send attributionID if it exists, otherwise send a hashed device+appid specific value as the advertiser_id.
-        if (attributionId != null) {
-            params.setProperty("attribution", attributionId);
+        if (attributionIdentifiers != null && attributionIdentifiers.getAttributionId() != null) {
+            params.setProperty("attribution", attributionIdentifiers.getAttributionId());
+        }
+
+        if (attributionIdentifiers != null && attributionIdentifiers.getAndroidAdvertiserId() != null) {
+            params.setProperty("advertiser_id", attributionIdentifiers.getAndroidAdvertiserId());
+            params.setProperty("advertiser_tracking_enabled", !attributionIdentifiers.isTrackingLimited());
         } else if (hashedDeviceAndAppId != null) {
             params.setProperty("advertiser_id", hashedDeviceAndAppId);
         }
 
         params.setProperty("application_tracking_enabled", !limitEventUsage);
     }
+
+    public static Method getMethodQuietly(Class<?> clazz, String methodName, Class<?>... parameterTypes) {
+        try {
+            return clazz.getMethod(methodName, parameterTypes);
+        } catch (NoSuchMethodException ex) {
+            return null;
+        }
+    }
+
+    public static Method getMethodQuietly(String className, String methodName, Class<?>... parameterTypes) {
+        try {
+            Class<?> clazz = Class.forName(className);
+            return getMethodQuietly(clazz, methodName, parameterTypes);
+        } catch (ClassNotFoundException ex) {
+            return null;
+        }
+    }
+
+    public static Object invokeMethodQuietly(Object receiver, Method method, Object... args) {
+        try {
+            return method.invoke(receiver, args);
+        } catch (IllegalAccessException ex) {
+            return null;
+        } catch (InvocationTargetException ex) {
+            return null;
+        }
+    }
+
 }
