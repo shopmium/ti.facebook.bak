@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>CFED336A-4FAE-47ED-ACB4-B0CB3E282C8C</string>
+	<key>IDESourceControlProjectName</key>
+	<string>Facebook</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>233CFF57-D874-4A98-84E0-6CF8EE4468F1</key>
+		<string>https://github.com/shopmium/ti.facebook.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>ios/Facebook.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>233CFF57-D874-4A98-84E0-6CF8EE4468F1</key>
+		<string>../../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://github.com/shopmium/ti.facebook.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>110</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>233CFF57-D874-4A98-84E0-6CF8EE4468F1</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>233CFF57-D874-4A98-84E0-6CF8EE4468F1</string>
+			<key>IDESourceControlWCCName</key>
+			<string>ti</string>
+		</dict>
+	</array>
+</dict>
+</plist>

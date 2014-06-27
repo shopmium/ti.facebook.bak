@@ -10,17 +10,9 @@
 #import "TiBlob.h"
 #import "TiUtils.h"
 #import "TiApp.h"
-#import "FBConnect/Facebook.h"
-#import "TiFacebookRequest.h"
-#import "TiFacebookDialogRequest.h"
-#import "TiFacebookLoginButtonProxy.h"
-#import "FBSBJSON.h"
-#import "FBSession.h"
 
-/**
- * Good reference for access_tokens and what all this crap means
- * http://benbiddington.wordpress.com/2010/04/23/facebook-graph-api-getting-access-tokens/
- */
+BOOL temporarilySuspended = NO;
+BOOL skipMeCall = NO;
 
 @implementation FacebookModule
 #pragma mark Internal
@@ -37,88 +29,11 @@
 	return @"facebook";
 }
 
-@synthesize facebook;
-
-#pragma mark Sessions
-
--(void)_save
-{
-	VerboseLog(@"[DEBUG] facebook _save");
-	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-	if ((uid != (NSString *) [NSNull null]) && (uid.length > 0)) {
-		[defaults setObject:uid forKey:@"FBUserId"];
-	} else {
-		[defaults removeObjectForKey:@"FBUserId"];
-	}
-	
-	NSString *access_token = facebook.accessToken;
-	if ((access_token != (NSString *) [NSNull null]) && (access_token.length > 0)) {
-		[defaults setObject:access_token forKey:@"FBAccessToken"];
-	} else {
-		[defaults removeObjectForKey:@"FBAccessToken"];
-	}
-	
-	NSDate *expirationDate = facebook.expirationDate;
-	if (expirationDate) {
-		[defaults setObject:expirationDate forKey:@"FBSessionExpires"];
-	} else {
-		[defaults removeObjectForKey:@"FBSessionExpires"];
-	}
-	
-	if (appid) {
-		[defaults setObject:appid forKey:@"FBAppId"];
-	}else {
-		[defaults removeObjectForKey:@"FBAppId"];
-	}
-	
-	[defaults synchronize];
-}
-
--(void)_unsave
-{
-	VerboseLog(@"[DEBUG] facebook _unsave");
-	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-	[defaults removeObjectForKey:@"FBUserId"];
-	[defaults removeObjectForKey:@"FBAccessToken"];
-	[defaults removeObjectForKey:@"FBSessionExpires"];
-	[defaults removeObjectForKey:@"FBAppId"];
-	[defaults synchronize];
-}
-
--(id)_restore
-{
-	VerboseLog(@"[DEBUG] facebook _restore");
-	RELEASE_TO_NIL(uid);
-	RELEASE_TO_NIL(facebook);
-	RELEASE_TO_NIL(appid);
-	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-	NSString *uid_ = [defaults objectForKey:@"FBUserId"];
-	appid = [[defaults stringForKey:@"FBAppId"] copy];
-	facebook = [[Facebook alloc] initWithAppId:appid urlSchemeSuffix:nil andDelegate:self];
-	
-	VerboseLog(@"[DEBUG] facebook _restore, uid = %@",uid_);
-	if (uid_)
-	{
-		NSDate* expirationDate = [defaults objectForKey:@"FBSessionExpires"];
-		VerboseLog(@"[DEBUG] facebook _restore, expirationDate = %@",expirationDate);
-		if (!expirationDate || [expirationDate timeIntervalSinceNow] > 0) {
-			uid = [uid_ copy];
-			facebook.accessToken = [defaults stringForKey:@"FBAccessToken"];
-			facebook.expirationDate = expirationDate;
-			loggedIn = YES;
-			[self performSelector:@selector(fbDidLogin)];
-		}
-	}
-	return facebook;
-}
-
 #pragma mark Lifecycle
 
 -(void)dealloc
 {
-	RELEASE_TO_NIL(facebook);
 	RELEASE_TO_NIL(stateListeners);
-	RELEASE_TO_NIL(appid);
 	RELEASE_TO_NIL(permissions);
 	RELEASE_TO_NIL(uid);
 	[super dealloc];
@@ -130,137 +45,135 @@
 	if (launchOptions!=nil)
 	{
 		NSString *urlString = [launchOptions objectForKey:@"url"];
-		if (urlString!=nil && [urlString hasPrefix:@"fb"])
-		{
-			// if we're resuming under the same URL, we need to ignore
-			if (url!=nil && [urlString isEqualToString:url])
-			{
-				return YES;
-			}
-			RELEASE_TO_NIL(url);
-			url = [urlString copy];
-			[facebook handleOpenURL:[NSURL URLWithString:urlString]];
-			return YES;
-		}
+        NSString *sourceApplication = [launchOptions objectForKey:@"source"];
+        if (urlString != nil) {
+            return [FBAppCall handleOpenURL:[NSURL URLWithString:urlString] sourceApplication:sourceApplication];
+        } else {
+            return NO;
+        }
 	}
 	return NO;
 }
 
 -(void)resumed:(id)note
 {
-	VerboseLog(@"[DEBUG] facebook resumed");
-	
-	[self handleRelaunch];
+	NSLog(@"[DEBUG] facebook resumed");
+	if (!temporarilySuspended) {
+        [self handleRelaunch];
+    }
 }
 
--(void)autoExtendToken:(NSNotification *)notification
+-(void)activateApp:(NSNotification *)notification
 {
-	[facebook extendAccessTokenIfNeeded];
+    [FBAppCall handleDidBecomeActive];
 }
 
 -(void)startup
 {
-	VerboseLog(@"[DEBUG] facebook startup");
+	NSLog(@"[DEBUG] facebook startup");
 	[super startup];
-	TiThreadPerformOnMainThread(^{
-		NSNotificationCenter * nc = [NSNotificationCenter defaultCenter];
-		[nc addObserver:self selector:@selector(autoExtendToken:) name:UIApplicationDidBecomeActiveNotification object:nil];
-		[nc addObserver:self selector:@selector(autoExtendToken:) name:UIApplicationSignificantTimeChangeNotification object:nil];
-		[self _restore];
-	}, YES);
-	[self handleRelaunch];
 }
 
 -(void)shutdown:(id)sender
 {
-	VerboseLog(@"[DEBUG] facebook shutdown");
-	
+	NSLog(@"[DEBUG] facebook shutdown");
+
+    TiThreadPerformOnMainThread(^{
+        [FBSession.activeSession close];
+    }, NO);
+
 	[[NSNotificationCenter defaultCenter] removeObserver:self];
 	[super shutdown:sender];
 }
 
+-(void)suspend:(id)sender
+{
+	NSLog(@"[DEBUG] facebook suspend");
+    temporarilySuspended = YES; // to avoid crazy logic if user rejects a call or SMS
+}
+
+-(void)paused:(id)sender
+{
+	NSLog(@"[DEBUG] facebook paused");
+    temporarilySuspended = NO; // Since we are guaranteed full resume logic following this
+}
+
 -(BOOL)isLoggedIn
 {
-	return (facebook!=nil) && ([facebook isSessionValid]) && loggedIn;
+    return loggedIn;
 }
 
-#pragma mark Internal
-
--(NSString*)convertParams:(NSMutableDictionary*)params
+-(BOOL)passedShareDialogCheck
 {
-	NSString* httpMethod = nil;
-	for (NSString *key in [params allKeys])
-	{
-		id param = [params objectForKey:key];
-		
-		// convert to blob
-		if ([param isKindOfClass:[TiFile class]])
-		{
-			TiFile *file = (TiFile*)param;
-			if ([file size] > 0)
-			{
-				param = [file toBlob:nil];
-			}
-			else
-			{
-				// empty file?
-				param = [[[TiBlob alloc] initWithData:[NSData data] mimetype:@"text/plain"] autorelease];
-			}
-		}
-		
-		// this is an attachment, we need to convert to POST and switch to blob
-		if ([param isKindOfClass:[TiBlob class]])
-		{
-			httpMethod = @"POST";
-			TiBlob *blob = (TiBlob*)param;
-			VerboseLog(@"[DEBUG] detected blob with mime: %@",[blob mimeType]);
-			if ([[blob mimeType] hasPrefix:@"image/"])
-			{
-				UIImage *image = [blob image];
-				[params setObject:image forKey:key];
-			}
-			else
-			{
-				NSData *data = [blob data];
-				[params setObject:data forKey:key];
-			}
-		}
-        // All other arguments need to be encoded as JSON if they aren't strings
-        else if (![param isKindOfClass:[NSString class]]) {
-			FBSBJSON * stringifier = [[FBSBJSON alloc] init];
-            NSString* json_value = [stringifier stringWithObject:param allowScalar:YES error:nil];
-            if (json_value == nil) {
-                NSLog(@"Unable to encode argument %@:%@ to JSON: Encoding as ''",key,param);
-				json_value = @"";
-            }
-            [params setObject:json_value forKey:key];
-			[stringifier release];
+    return canShare;
+}
+
+#pragma mark Auth Internals
+
+- (void)populateUserDetails {
+    TiThreadPerformOnMainThread(^{
+        if (FBSession.activeSession.isOpen) {
+            FBRequestConnection *connection = [[FBRequestConnection alloc] init];
+            connection.errorBehavior = FBRequestConnectionErrorBehaviorReconnectSession
+                | FBRequestConnectionErrorBehaviorAlertUser
+                | FBRequestConnectionErrorBehaviorRetry;
+
+            [connection addRequest:[FBRequest requestForMe]
+                completionHandler:^(FBRequestConnection *connection, NSDictionary<FBGraphUser> *user, NSError *error) {
+                    RELEASE_TO_NIL(uid);
+                    if (!error) {
+                        uid = [[user objectForKey:@"id"] copy];
+                        loggedIn = YES;
+                        [self fireLogin:user cancelled:NO withError:nil];
+                    } else {
+                        // Error on /me call
+                        // In a future rev perhaps use stored user info
+                        // But for now bail out
+                        NSLog(@"/me graph call error");
+                        TiThreadPerformOnMainThread(^{
+                            [FBSession.activeSession closeAndClearTokenInformation];
+                        }, YES);
+                        loggedIn = NO;
+                        // We set error to nil since any useful message was already surfaced
+                        [self fireLogin:nil cancelled:NO withError:nil];
+
+                    }
+            }];
+            [connection start];
         }
-	}
-	return httpMethod;
+    }, NO);
 }
 
-//This is here for backwards compatibility to replace ENSURE_CLASS.
-//As of writing, building for 3.1.0 breaks 3.0.0 otherwise.
--(NSString *)errorStringIf:(id)value isNotClass:(NSString *)typeName forArgument:(NSString *)argName
+- (void)sessionStateChanged:(FBSession *)session
+                      state:(FBSessionState) state
+                      error:(NSError *)error
 {
-	NSString * valueType;
-	if([value isKindOfClass:[NSString class]]) valueType = @"a string";
-	else if([value isKindOfClass:[NSNumber class]]) valueType = @"a number";
-	else if([value isKindOfClass:[NSArray class]]) valueType = @"an array";
-	else if([value isKindOfClass:[NSDictionary class]]) valueType = @"an object";
-	else if([value isKindOfClass:[KrollCallback class]]) valueType = @"a function";
-	else if([value isKindOfClass:[KrollWrapper class]]) valueType = @"a function";
-	else
-	{
-		valueType = [value description];
-	}
-	return [NSString stringWithFormat:@"%@ takes a %@, but was passed %@ instead",argName,typeName,valueType];
-}
-#define FACEBOOK_ENSURE_TYPE(x,t,n)	\
-if(![x isKindOfClass:[t class]]){ \
-[self throwException:TiExceptionInvalidType subreason: \
-[self errorStringIf:x isNotClass:n forArgument:@"" #x] location:CODELOCATION]; \
+    RELEASE_TO_NIL(uid);
+    if (error) {
+        NSLog(@"sessionStateChanged error");
+        loggedIn = NO;
+        BOOL userCancelled = error.fberrorCategory == FBErrorCategoryUserCancelled;
+        [self fireLogin:nil cancelled:userCancelled withError:error];
+    } else {
+        switch (state) {
+            case FBSessionStateOpen:
+                NSLog(@"[DEBUG] FBSessionStateOpen");
+                [self populateUserDetails];
+                 break;
+            case FBSessionStateClosed:
+            case FBSessionStateClosedLoginFailed:
+                NSLog(@"[DEBUG] facebook session closed");
+                TiThreadPerformOnMainThread(^{
+                    [FBSession.activeSession closeAndClearTokenInformation];
+                }, YES);
+
+                loggedIn = NO;
+                [self fireEvent:@"logout"];
+                break;
+            default:
+                break;
+        }
+    }
 }
 
 #pragma mark Public APIs
@@ -290,18 +203,11 @@ if(![x isKindOfClass:[t class]]){ \
 	return NUMBOOL([self isLoggedIn]);
 }
 
-/**
- * JS example:
- *
- * var facebook = require('facebook');
- * facebook.appid = '1234';
- * alert(facebook.appid);
- *
- */
--(id)appid
+-(id)canPresentShareDialog
 {
-	return appid;
+	return NUMBOOL([self passedShareDialogCheck]);
 }
+
 
 /**
  * JS example:
@@ -313,19 +219,12 @@ if(![x isKindOfClass:[t class]]){ \
  */
 -(id)permissions
 {
-	return permissions;
-}
+    __block NSArray *perms;
+    TiThreadPerformOnMainThread(^{
+        perms = FBSession.activeSession.permissions;
+    }, YES);
 
-/**
- * JS example:
- *
- * var facebook = require('facebook');
- * alert(facebook.forceDialogAuth);
- *
- */
--(id)forceDialogAuth
-{
-    return [NSNumber numberWithBool:forceDialogAuth];
+    return perms;
 }
 
 /**
@@ -335,9 +234,35 @@ if(![x isKindOfClass:[t class]]){ \
  * alert(facebook.accessToken);
  *
  */
+
 -(id)accessToken
 {
-	return [facebook accessToken];
+    __block NSString * token;
+    TiThreadPerformOnMainThread(^{
+        token = FBSession.activeSession.accessTokenData.accessToken;
+    }, YES);
+
+    return token;
+}
+
+-(id)audienceNone
+{
+    return [NSNumber numberWithInt:FBSessionDefaultAudienceNone];
+}
+
+-(id)audienceOnlyMe
+{
+    return [NSNumber numberWithInt:FBSessionDefaultAudienceOnlyMe];
+}
+
+-(id)audienceFriends
+{
+    return [NSNumber numberWithInt:FBSessionDefaultAudienceFriends];
+}
+
+-(id)audienceEveryone
+{
+    return [NSNumber numberWithInt:FBSessionDefaultAudienceEveryone];
 }
 
 /**
@@ -347,24 +272,15 @@ if(![x isKindOfClass:[t class]]){ \
  * alert(facebook.expirationDate);
  *
  */
+
 -(id)expirationDate
 {
-	return [facebook expirationDate];
-}
+    __block NSDate *expirationDate;
+    TiThreadPerformOnMainThread(^{
+        expirationDate = FBSession.activeSession.accessTokenData.expirationDate;
+    }, YES);
 
-/**
- * JS example:
- *
- * var facebook = require('facebook');
- * facebook.appid = '1234';
- * alert(facebook.appid);
- *
- */
--(void)setAppid:(id)arg
-{
-	[appid autorelease];
-	appid = [[TiUtils stringValue:arg] copy];
-	[facebook setAppId:appid];
+    return expirationDate;
 }
 
 /**
@@ -385,21 +301,10 @@ if(![x isKindOfClass:[t class]]){ \
  * JS example:
  *
  * var facebook = require('facebook');
- * facebook.forceDialogAuth = true;
- * alert(facebook.forceDialogAuth);
- *
- */
--(void)setForceDialogAuth:(id)arg
-{
-    forceDialogAuth = [TiUtils boolValue:arg def:NO];
-}
-
-/**
- * JS example:
- *
- * var facebook = require('facebook');
  *
  * facebook.addEventListener('login',function(e) {
+ *    // You *will* get this event if loggedIn == false below
+ *    // Make sure to handle all possible cases of this event
  *    if (e.success) {
  *		alert('login from uid: '+e.uid+', name: '+e.data.name);
  *    }
@@ -415,111 +320,55 @@ if(![x isKindOfClass:[t class]]){ \
  *    alert('logged out');
  * });
  *
- * facebook.appid = 'my_appid';
- * facebook.permissions = ['publish_stream'];
- * facebook.authorize();
+ * facebook.permissions = ['email'];
+ * facebook.initialize(); // after you set up login/logout listeners and permissions
+ * if (!fb.getLoggedIn()) {
+ * // then you want to show a login UI
+ * // where you should have a button that when clicked calls
+ * // facebook.authorize();
  *
  */
+
 -(void)authorize:(id)args
 {
-	VerboseLog(@"[DEBUG] facebook authorize");
-	
-	if ([self isLoggedIn])
-	{
-		// if already authorized, this should do nothing
-		return;
-	}
-	
-	if (appid==nil)
-	{
-		[self throwException:@"missing appid" subreason:nil location:CODELOCATION];
-	}
-	
+	NSLog(@"[DEBUG] facebook authorize");
+
 	TiThreadPerformOnMainThread(^{
-		// forget in case it fails
-		[self _unsave];
-		
 		NSArray *permissions_ = permissions == nil ? [NSArray array] : permissions;
-		[facebook setForceDialog:forceDialogAuth];
-		[facebook authorize:permissions_];
+        [FBSession openActiveSessionWithReadPermissions:permissions_
+                                           allowLoginUI:YES
+                                      completionHandler:
+            ^(FBSession *session,
+                FBSessionState state, NSError *error) {
+                [self sessionStateChanged:session state:state error:error];
+         }];
 	}, NO);
 }
 
-/**
- * JS example:
- *
- * var facebook = require('facebook');
- * ...
- * //While authorized for readonly permissions.
- * facebook.reauthorize(['read_stream','publish_stream'],'everyone',function(e){
- *     if(e.success){
- *         facebook.requestWithGraphPath(...);
- *     } else {
- *         Ti.API.debug('Failed authorization due to: ' + e.error);
- *     }
- * });
- */
--(void)reauthorize:(id)args
+// We have this function so that you can set up your listeners and permissions whenever you want
+// Call initialize when ready, you will get a login event if there was a cached token
+// else loggedIn will be false
+-(void)initialize:(id)args
 {
-	ENSURE_ARG_COUNT(args, 3);
-	
-	if (![self isLoggedIn])
-	{
-		[self throwException:@"NotAuthorized" subreason:@"App tried to reauthorize before being logged in." location:CODELOCATION];
-		return;
-	}
-	
-	NSArray * writePermissions = [args objectAtIndex:0];
-	NSString * audienceString = [TiUtils stringValue:[args objectAtIndex:1]];
-	KrollCallback * callback = [args objectAtIndex:2];
-	
-	FACEBOOK_ENSURE_TYPE(writePermissions, NSArray, @"an array");
-	FACEBOOK_ENSURE_TYPE(audienceString, NSString, @"a string");
-	FACEBOOK_ENSURE_TYPE(callback, KrollCallback, @"a function");
-	
-	FBSessionLoginBehavior behavior = FBSessionLoginBehaviorUseSystemAccountIfPresent;
-	FBSessionDefaultAudience audience = FBSessionDefaultAudienceEveryone;
-	
-	FBSessionReauthorizeResultHandler handler= ^(FBSession *session, NSError *error)
-	{
-		bool success = (error == nil);
-		NSString * errorString = nil;
-		int code = 0;
-		if(!success)
-		{
-			code = [error code];
-			if (code == 0)
-			{
-				code = -1;
-			}
-			errorString = [error localizedDescription];
-			NSString * userInfoMessage = [[error userInfo] objectForKey:@"message"];
-			if (errorString == nil)
-			{
-				errorString = userInfoMessage;
-			}
-			else if (userInfoMessage != nil)
-			{
-				errorString = [errorString stringByAppendingFormat:@" %@",userInfoMessage];
-			}
-		}
-		
-		NSNumber * errorCode = [NSNumber numberWithInteger:code];
-		NSDictionary * propertiesDict = [[NSDictionary alloc] initWithObjectsAndKeys:
-										 [NSNumber numberWithBool:success],@"success",
-										 errorCode,@"code", errorString,@"error", nil];
-		
-		KrollEvent * invocationEvent = [[KrollEvent alloc] initWithCallback:callback eventObject:propertiesDict thisObject:self];
-		[[callback context] enqueue:invocationEvent];
-		[invocationEvent release];
-		[propertiesDict release];
-	};
-	
 	TiThreadPerformOnMainThread(^{
-		[[facebook session] reauthorizeWithPublishPermissions:writePermissions
-											  defaultAudience:audience
-											completionHandler:handler];
-	}, NO);
+		NSNotificationCenter * nc = [NSNotificationCenter defaultCenter];
+        //NSString * savedToken = [TiUtils stringValue:args];
+
+        [nc addObserver:self selector:@selector(activateApp:) name:UIApplicationDidBecomeActiveNotification object:nil];
+
+        FBShareDialogParams *params = [[FBShareDialogParams alloc] init];
+        params.link = [NSURL URLWithString:@"http://developers.facebook.com/ios"];
+        canShare = [FBDialogs canPresentShareDialogWithParams:params];
+
+        if (FBSession.activeSession.state == FBSessionStateCreatedTokenLoaded) {
+            // Start with logged-in state, guaranteed no login UX is fired since logged-in
+            loggedIn = YES;
+            //skipMeCall = [FBSession.activeSession.accessTokenData.accessToken isEqualToString:savedToken];
+            [self authorize:nil];
+        } else {
+            loggedIn = NO;
+        }
+	}, YES);
 }
 
 /**
@@ -531,11 +380,193 @@ if(![x isKindOfClass:[t class]]){ \
  */
 -(void)logout:(id)args
 {
-	VerboseLog(@"[DEBUG] facebook logout");
+	NSLog(@"[DEBUG] facebook logout");
 	if ([self isLoggedIn])
 	{
-		TiThreadPerformOnMainThread(^{[facebook logout:self];}, NO);
+        RELEASE_TO_NIL(uid);
+        TiThreadPerformOnMainThread(^{
+            [FBSession.activeSession closeAndClearTokenInformation];
+        }, NO);
 	}
+}
+
+-(void)share:(id)args
+{
+	NSLog(@"[DEBUG] facebook share");
+	if (canShare){
+
+        NSDictionary* params = [args objectAtIndex:0];
+        NSString* urlStr = [params objectForKey:@"url"];
+        NSURL* linkUrl = [NSURL URLWithString:urlStr];
+        NSString* namespaceObject = [params objectForKey:@"namespaceObject"];
+        NSString* namespaceAction = [params objectForKey:@"namespaceAction"];
+        NSString* objectName = [params objectForKey:@"objectName"];
+        NSString* placeId = [params objectForKey:@"placeId"];
+        NSString* imageUrl = [params objectForKey:@"imageUrl"];
+        NSString* openGraphTitle = [params objectForKey:@"title"];
+        NSString* openGraphDescription = [params objectForKey:@"description"];
+
+        TiThreadPerformOnMainThread(^{
+            if (objectName == nil || namespaceObject == nil || namespaceAction == nil){
+                [FBDialogs presentShareDialogWithLink:linkUrl
+                    handler:^(FBAppCall *call, NSDictionary *results, NSError *error) {
+                    if(error) {
+                        NSLog(@"[DEBUG] Facebook share error %@", error.description);
+                    } else {
+                        NSLog(@"Facebook share success!");
+                    }
+                }];
+            } else {
+                id<FBGraphObject> openGraphObject =
+                [FBGraphObject openGraphObjectForPostWithType:namespaceObject
+                        title:openGraphTitle
+                        image:imageUrl
+                        url:urlStr
+                        description:openGraphDescription];
+
+                id<FBOpenGraphAction> openGraphAction = (id<FBOpenGraphAction>)[FBGraphObject graphObject];
+                [openGraphAction setObject:openGraphObject forKey:objectName];
+
+                if (placeId != nil){
+                    id<FBGraphPlace> place = (id<FBGraphPlace>)[FBGraphObject graphObject];
+                    [place setId:placeId];
+
+                    [openGraphAction setPlace:place];
+                }
+
+                [FBDialogs presentShareDialogWithOpenGraphAction:openGraphAction
+                        actionType:namespaceAction
+                        previewPropertyName:objectName
+                        handler:^(FBAppCall *call, NSDictionary *results, NSError *error) {
+                            if(error) {
+                                NSLog(@"Error: %@", error.description);
+                            } else {
+                                NSLog(@"Success!");
+                            }
+                            }];
+            }
+        }, NO);
+    }
+}
+
+/**
+ * JS example:
+ *
+ * var facebook = require('facebook');
+ * ...
+ * facebook.requestNewReadPermissions(['read_stream','user_hometown', etc...], function(e){
+ *     if(e.success){
+ *         facebook.requestWithGraphPath(...);
+ *     } else if (e.cancelled){
+ *         .....
+ *     } else {
+ *         Ti.API.debug('Failed authorization due to: ' + e.error);
+ *     }
+ * });
+ */
+-(void)requestNewReadPermissions:(id)args
+{
+	ENSURE_ARG_COUNT(args, 2);
+
+	NSArray * readPermissions = [args objectAtIndex:0];
+	KrollCallback * callback = [args objectAtIndex:1];
+
+	TiThreadPerformOnMainThread(^{
+        [FBSession.activeSession requestNewReadPermissions:readPermissions
+                completionHandler:^(FBSession *session, NSError *error) {
+                    bool success = (error == nil);
+                    bool cancelled = NO;
+                    NSString * errorString = nil;
+                    int code = 0;
+                    if(!success)
+                    {
+                        code = [error code];
+                        if (code == 0)
+                        {
+                            code = -1;
+                        }
+                        if (error.fberrorCategory == FBErrorCategoryUserCancelled) {
+                            cancelled = YES;
+                        } else if (error.fberrorShouldNotifyUser) {
+                            errorString = error.fberrorUserMessage;
+                        } else {
+                            errorString = @"An unexpected error";
+                        }
+                    }
+
+                    NSNumber * errorCode = [NSNumber numberWithInteger:code];
+                    NSDictionary * propertiesDict = [[NSDictionary alloc] initWithObjectsAndKeys:
+                                                     [NSNumber numberWithBool:success],@"success",
+                                                     [NSNumber numberWithBool:cancelled],@"cancelled",
+                                                     errorCode,@"code", errorString,@"error", nil];
+
+                    KrollEvent * invocationEvent = [[KrollEvent alloc] initWithCallback:callback eventObject:propertiesDict thisObject:self];
+                    [[callback context] enqueue:invocationEvent];
+                    [invocationEvent release];
+                    [propertiesDict release];
+        }];
+	}, NO);
+}
+
+/**
+ * JS example:
+ *
+ * var facebook = require('facebook');
+ * ...
+ * facebook.requestNewPublishPermissions(['read_stream','user_hometown', etc...], fb.audienceFriends, function(e){
+ *     if(e.success){
+ *         facebook.requestWithGraphPath(...);
+ *     } else if (e.cancelled){
+ *         .....
+ *     } else {
+ *         Ti.API.debug('Failed authorization due to: ' + e.error);
+ *     }
+ * });
+ */
+-(void)requestNewPublishPermissions:(id)args
+{
+	ENSURE_ARG_COUNT(args, 3);
+
+	NSArray * writePermissions = [args objectAtIndex:0];
+    FBSessionDefaultAudience defaultAudience = [TiUtils intValue:[args objectAtIndex:1]];
+	KrollCallback * callback = [args objectAtIndex:2];
+
+	TiThreadPerformOnMainThread(^{
+        [FBSession.activeSession requestNewPublishPermissions:writePermissions
+            defaultAudience:defaultAudience
+            completionHandler:^(FBSession *session, NSError *error) {
+                bool success = (error == nil);
+                bool cancelled = NO;
+                NSString * errorString = nil;
+                int code = 0;
+                if(!success)
+                {
+                    code = [error code];
+                    if (code == 0)
+                    {
+                        code = -1;
+                    }
+                    if (error.fberrorCategory == FBErrorCategoryUserCancelled) {
+                        cancelled = YES;
+                    } else if (error.fberrorShouldNotifyUser) {
+                        errorString = error.fberrorUserMessage;
+                    } else {
+                        errorString = @"An unexpected error";
+                    }
+                }
+
+                NSNumber * errorCode = [NSNumber numberWithInteger:code];
+                NSDictionary * propertiesDict = [[NSDictionary alloc] initWithObjectsAndKeys:
+                                                 [NSNumber numberWithBool:success],@"success",
+                                                 [NSNumber numberWithBool:cancelled],@"cancelled",
+                                                 errorCode,@"code", errorString,@"error", nil];
+
+                KrollEvent * invocationEvent = [[KrollEvent alloc] initWithCallback:callback eventObject:propertiesDict thisObject:self];
+                [[callback context] enqueue:invocationEvent];
+                [invocationEvent release];
+                [propertiesDict release];
+            }];
+	}, NO);
 }
 
 /**
@@ -545,9 +576,12 @@ if(![x isKindOfClass:[t class]]){ \
  *
  * facebook.requestWithGraphPath('me',{}, 'post', function(e) {
  *    if (e.success) {
- *      alert('success! welcome userid: '+e.id);
+ *      // e.path contains original path (e.g. 'me'), e.graphData contains the result
  *    }
  *    else {
+ *      // note that we use new Facebook error handling
+ *      // thus if there was any user action to take - he was already notified
+ *      // see https://developers.facebook.com/docs/ios/automatic-error-handling/
  *      alert(e.error);
  *    }
  * });
@@ -556,133 +590,58 @@ if(![x isKindOfClass:[t class]]){ \
 -(void)requestWithGraphPath:(id)args
 {
 	VerboseLog(@"[DEBUG] facebook requestWithGraphPath");
-	
+
 	ENSURE_ARG_COUNT(args,4);
-	
+
 	NSString* path = [args objectAtIndex:0];
 	NSMutableDictionary* params = [args objectAtIndex:1];
 	NSString* httpMethod = [args objectAtIndex:2];
 	KrollCallback* callback = [args objectAtIndex:3];
-	
-	FACEBOOK_ENSURE_TYPE(path, NSString, @"a string");
-	FACEBOOK_ENSURE_TYPE(params, NSDictionary, @"an object");
-	FACEBOOK_ENSURE_TYPE(httpMethod, NSString, @"a string");
-	FACEBOOK_ENSURE_TYPE(callback, KrollCallback, @"a function");
-	
-	[self convertParams:params];
-	
-	TiThreadPerformOnMainThread(^{
-		TiFacebookRequest* delegate = [[[TiFacebookRequest alloc] initWithPath:path callback:callback module:self graph:YES] autorelease];
-		[facebook requestWithGraphPath:path andParams:params andHttpMethod:httpMethod andDelegate:delegate];
-	}, NO);
-}
 
-/**
- * JS example:
- *
- * var facebook = require('facebook');
- *
- * facebook.request('photos.upload',{picture:blob},function(e) {
- *    if (e.success) {
- *      alert('success!');
- *    }
- *    else {
- *      alert(e.error);
- *    }
- * });
- *
- */
--(void)request:(id)args
-{
-	VerboseLog(@"[DEBUG] facebook request");
-	
-	ENSURE_ARG_COUNT(args,3);
-	
-	NSString* method = [args objectAtIndex:0];
-	NSMutableDictionary* params = [args objectAtIndex:1];
-	KrollCallback* callback = [args objectAtIndex:2];
+    TiThreadPerformOnMainThread(^{
+        FBRequestConnection *connection = [[FBRequestConnection alloc] init];
+        connection.errorBehavior = FBRequestConnectionErrorBehaviorReconnectSession
+        | FBRequestConnectionErrorBehaviorAlertUser
+        | FBRequestConnectionErrorBehaviorRetry;
 
-	FACEBOOK_ENSURE_TYPE(method, NSString, @"a string");
-	FACEBOOK_ENSURE_TYPE(params, NSDictionary, @"an object");
-	FACEBOOK_ENSURE_TYPE(callback, KrollCallback, @"a function");
+        FBRequest *request = [FBRequest requestWithGraphPath:path
+                                                  parameters:params
+                                                  HTTPMethod:httpMethod];
 
-	NSString *httpMethod = @"GET";
-	NSString* changedHttpMethod = [self convertParams:params];
-	if (changedHttpMethod != nil) {
-		httpMethod = changedHttpMethod;
-	}
-	
-	TiThreadPerformOnMainThread(^{
-		TiFacebookRequest* delegate = [[[TiFacebookRequest alloc] initWithPath:method callback:callback module:self graph:NO] autorelease];
-		[facebook requestWithMethodName:method andParams:params andHttpMethod:httpMethod andDelegate:delegate];
-	}, NO);
-}
+        [connection addRequest:request
+             completionHandler:^(FBRequestConnection *connection, id result, NSError *error) {
+                 NSDictionary * returnedObject;
+                 BOOL success;
+                 if (!error) {
+                     success = YES;
+                     returnedObject = [[NSDictionary alloc] initWithObjectsAndKeys:
+                                       result,@"graphData", NUMBOOL(success), @"success",
+                                       path, @"path",nil];
+                 } else {
+                     NSLog(@"/me graph call error");
+                     success = NO;
+                     NSString * errorString;
+                     if (error.fberrorShouldNotifyUser) {
+                         errorString = error.fberrorUserMessage;
+                     } else {
+                         errorString = @"An unexpected error";
+                     }
+                     returnedObject = [[NSDictionary alloc] initWithObjectsAndKeys:
+                                       NUMBOOL(success), @"success",
+                                       path, @"path", errorString, @"error", nil];
 
-/**
- * JS example:
- *
- * var facebook = require('facebook');
- * facebook.dialog('stream.publish',{'api_key':'1234'},function(e) {
- *    if (e.success) {
- *       Ti.API.info('result was = '+JSON.stringify(e.result));
- *    }
- * });
- *
- */
--(void)dialog:(id)args
-{
-	ENSURE_ARG_COUNT(args,3);
-	
-	VerboseLog(@"[DEBUG] facebook dialog");
-	
-	NSString* action = [args objectAtIndex:0];
-	NSMutableDictionary* params = [args objectAtIndex:1];
-	KrollCallback* callback = [args objectAtIndex:2];
-	
-	FACEBOOK_ENSURE_TYPE(action, NSString, @"a string");
-	FACEBOOK_ENSURE_TYPE(params, NSDictionary, @"an object");
-	FACEBOOK_ENSURE_TYPE(callback, KrollCallback, @"a function");
-	
-	[self convertParams:params];
-	
-	TiThreadPerformOnMainThread(^{
-		TiFacebookDialogRequest *delegate = [[[TiFacebookDialogRequest alloc] initWithCallback:callback module:self] autorelease];
-		[facebook dialog:action andParams:params andDelegate:delegate];
-	}, NO);
-}
+                 }
+                 KrollEvent * invocationEvent = [[KrollEvent alloc] initWithCallback:callback eventObject:returnedObject thisObject:self];
+                 [[callback context] enqueue:invocationEvent];
+                 [invocationEvent release];
+                 [returnedObject release];
 
-/**
- * JS example:
- *
- * var facebook = require('facebook');
- * var button = facebook.createLoginButton({bottom:10});
- * window.add(button);
- *
- */
--(id)createLoginButton:(id)args
-{
-	return [[[TiFacebookLoginButtonProxy alloc] _initWithPageContext:[self executionContext] args:args module:self] autorelease];
+             }];
+        [connection start];
+    }, NO);
 }
 
 #pragma mark Listener work
-
--(void)fireLoginChange
-{
-	if (stateListeners!=nil)
-	{
-		for (id<TiFacebookStateListener> listener in [NSArray arrayWithArray:stateListeners])
-		{
-			if (loggedIn)
-			{
-				[listener login];
-			}
-			else
-			{
-				[listener logout];
-			}
-		}
-	}
-}
 
 -(void)fireLogin:(id)result cancelled:(BOOL)cancelled withError:(NSError *)error
 {
@@ -697,24 +656,30 @@ if(![x isKindOfClass:[t class]]){ \
 								  NUMBOOL(success),@"success",
 								  NUMINT(code),@"code",nil];
 	if(error != nil){
-		NSString * errorString = [error localizedDescription];
-		NSString * userInfoMessage = [[error userInfo] objectForKey:@"message"];
-		if (errorString == nil)
-		{
-			errorString = userInfoMessage;
-		}
-		else if (userInfoMessage != nil)
-		{
-			errorString = [errorString stringByAppendingFormat:@" %@",userInfoMessage];
-		}
-		
-		if (errorString != nil) {
-			[event setObject:errorString forKey:@"error"];
-		}
-	}
-	else if (cancelled)
-	{
-		[event setObject:@"User cancelled the login process." forKey:@"error"];
+        NSString * errorMessage = @"OTHER: ";
+        if (error.fberrorShouldNotifyUser) {
+            if ([[error userInfo][FBErrorLoginFailedReason]
+                 isEqualToString:FBErrorLoginFailedReasonSystemDisallowedWithoutErrorValue]) {
+                // Show a different error message
+                errorMessage = @"Go to Settings > Facebook and turn ON ";
+            } else {
+                // If the SDK has a message for the user, surface it.
+                errorMessage = error.fberrorUserMessage;
+            }
+        } else if (error.fberrorCategory == FBErrorCategoryAuthenticationReopenSession) {
+            // It is important to handle session closures as mentioned. You can inspect
+            // the error for more context but this sample generically notifies the user.
+            errorMessage = @"Session Login Error";
+        } else if (error.fberrorCategory == FBErrorCategoryUserCancelled) {
+            // The user has cancelled a login. You can inspect the error
+            // for more context. For this sample, we will simply ignore it.
+            errorMessage = @"User cancelled the login process.";
+        } else {
+            // For simplicity, this sample treats other errors blindly, but you should
+            // refer to https://developers.facebook.com/docs/technical-guides/iossdk/errors/ for more information.
+            errorMessage = [errorMessage stringByAppendingFormat:@" %@", (NSString *) error];
+        }
+        [event setObject:errorMessage forKey:@"error"];
 	}
 
 	if(result != nil)
@@ -728,91 +693,6 @@ if(![x isKindOfClass:[t class]]){ \
 	[self fireEvent:@"login" withObject:event];
 }
 
-
-#pragma mark Delegate
-
-/**
- * Called when the user successfully logged in.
- */
-- (void)fbDidLogin
-{
-	VerboseLog(@"[DEBUG] facebook fbDidLogin");
-	
-	[facebook requestWithGraphPath:@"me" andDelegate:self];
-}
-
-/**
- * Called when the user dismissed the dialog without logging in.
- */
-- (void)fbDidNotLogin:(BOOL)cancelled
-{
-	VerboseLog(@"[DEBUG] facebook fbDidNotLogin: cancelled=%d",cancelled);
-	loggedIn = NO;
-	[self fireLoginChange];
-	[self fireLogin:nil cancelled:cancelled withError:nil];
-}
-
-/**
- * Called when the user logged out.
- */
-- (void)fbDidLogout
-{
-	VerboseLog(@"[DEBUG] facebook fbDidLogout");
-	
-	loggedIn = NO;
-	[self _unsave];
-	[self fireLoginChange];
-	[self fireEvent:@"logout"];
-}
-
-- (void)fbDidExtendToken:(NSString*)accessToken
-               expiresAt:(NSDate*)expiresAt;
-
-{
-	[self _save];
-}
-
-- (void)fbSessionInvalidated;
-{
-	loggedIn = NO;
-	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-	[defaults removeObjectForKey:@"FBAccessToken"];
-	[defaults removeObjectForKey:@"FBSessionExpires"];
-	[defaults synchronize];
-	[self fireLoginChange];
-	//Because the user ID is still the same, we can't unsave. The
-	//session expiring should NOT be considered an active move by the user
-	//to log out, so maintain userID and appID and do not spoof a logout.
-}
-
-
-//----------- these are only used when the login is successful to grab UID
-
-/**
- * FBRequestDelegate
- */
-- (void)request:(FBRequest*)request didLoad:(id)result
-{
-	VerboseLog(@"[DEBUG] facebook didLoad");
-	
-	RELEASE_TO_NIL(uid);
-	uid = [[result objectForKey:@"id"] copy];
-	[self _save];
-	loggedIn = YES;
-	[self fireLoginChange];
-	[self fireLogin:result cancelled:NO withError:nil];
-}
-
-
-- (void)request:(FBRequest*)request didFailWithError:(NSError*)error
-{
-	VerboseLog(@"[DEBUG] facebook didFailWithError: %@",error);
-	
-	RELEASE_TO_NIL(uid);
-	loggedIn = NO;
-	[self fireLoginChange];
-	[self fireLogin:nil cancelled:NO withError:error];
-}
 
 #pragma mark Listeners
 
@@ -836,8 +716,5 @@ if(![x isKindOfClass:[t class]]){ \
 		}
 	}
 }
-
-MAKE_SYSTEM_PROP(BUTTON_STYLE_NORMAL,FB_LOGIN_BUTTON_NORMAL);
-MAKE_SYSTEM_PROP(BUTTON_STYLE_WIDE,FB_LOGIN_BUTTON_WIDE);
 
 @end
