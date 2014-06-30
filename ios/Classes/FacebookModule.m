@@ -294,6 +294,11 @@ BOOL skipMeCall = NO;
    return  [FBSettings defaultUrlSchemeSuffix];
 }
 
+-(void)setDefaultAppID:(id)args
+{
+    [FBSettings setDefaultAppID:(NSString*)args];
+}
+
 /**
  * JS example:
  *

@@ -33,5 +33,6 @@
 -(void)logout:(id)args;
 -(void)setDefaultUrlSchemeSuffix:(id)args;
 -(NSString*)getDefaultUrlSchemeSuffix;
+-(void)setDefaultAppID:(id)args;
 
 @end
