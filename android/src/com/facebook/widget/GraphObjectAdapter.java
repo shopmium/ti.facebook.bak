@@ -24,11 +24,11 @@ import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.widget.*;
 import com.facebook.*;
+import com.facebook.android.R;
 import com.facebook.internal.ImageDownloader;
 import com.facebook.internal.ImageRequest;
 import com.facebook.internal.ImageResponse;
 import com.facebook.model.GraphObject;
-import com.facebook.internal.Utility;
 import org.json.JSONObject;
 
 import java.net.URI;
@@ -285,9 +285,7 @@ class GraphObjectAdapter<T extends GraphObject> extends BaseAdapter implements S
         TextView result = (TextView) convertView;
 
         if (result == null) {
-            // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-            //result = (TextView) inflater.inflate(R.layout.com_facebook_picker_list_section_header, null);
-            result = (TextView) inflater.inflate(Utility.resId_pickerListSectionHeader, null);
+            result = (TextView) inflater.inflate(R.layout.com_facebook_picker_list_section_header, null);
         }
 
         result.setText(sectionHeader);
@@ -310,35 +308,26 @@ class GraphObjectAdapter<T extends GraphObject> extends BaseAdapter implements S
         View result = convertView;
 
         if (result == null) {
-            // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-            //result = inflater.inflate(R.layout.com_facebook_picker_activity_circle_row, null);
-            result = inflater.inflate(Utility.resId_pickerActivityCircle, null);
+            result = inflater.inflate(R.layout.com_facebook_picker_activity_circle_row, null);
         }
-        //ProgressBar activityCircle = (ProgressBar) result.findViewById(R.id.com_facebook_picker_row_activity_circle);
-        ProgressBar activityCircle = (ProgressBar) result.findViewById(Utility.resId_pickerRowActivityCircle); //TITANIUM
+        ProgressBar activityCircle = (ProgressBar) result.findViewById(R.id.com_facebook_picker_row_activity_circle);
         activityCircle.setVisibility(View.VISIBLE);
 
         return result;
     }
 
     protected int getGraphObjectRowLayoutId(T graphObject) {
-        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-        //return R.layout.com_facebook_picker_list_row;
-        return Utility.resId_pickerListRow;
+        return R.layout.com_facebook_picker_list_row;
     }
 
     protected int getDefaultPicture() {
-        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-        //return R.drawable.com_facebook_profile_default_icon;
-        return Utility.resId_profileDefaultIcon;
+        return R.drawable.com_facebook_profile_default_icon;
     }
 
     protected View createGraphObjectView(T graphObject) {
         View result = inflater.inflate(getGraphObjectRowLayoutId(graphObject), null);
 
-        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-        //ViewStub checkboxStub = (ViewStub) result.findViewById(R.id.com_facebook_picker_checkbox_stub);
-        ViewStub checkboxStub = (ViewStub) result.findViewById(Utility.resId_pickerCheckboxStub);
+        ViewStub checkboxStub = (ViewStub) result.findViewById(R.id.com_facebook_picker_checkbox_stub);
         if (checkboxStub != null) {
             if (!getShowCheckbox()) {
                 checkboxStub.setVisibility(View.GONE);
@@ -347,8 +336,8 @@ class GraphObjectAdapter<T extends GraphObject> extends BaseAdapter implements S
                 updateCheckboxState(checkBox, false);
             }
         }
-        //ViewStub profilePicStub = (ViewStub) result.findViewById(R.id.com_facebook_picker_profile_pic_stub);
-        ViewStub profilePicStub = (ViewStub) result.findViewById(Utility.resId_pickerProfilePicStub); //TITANIUM
+
+        ViewStub profilePicStub = (ViewStub) result.findViewById(R.id.com_facebook_picker_profile_pic_stub);
         if (!getShowPicture()) {
             profilePicStub.setVisibility(View.GONE);
         } else {
@@ -364,16 +353,13 @@ class GraphObjectAdapter<T extends GraphObject> extends BaseAdapter implements S
         view.setTag(id);
 
         CharSequence title = getTitleOfGraphObject(graphObject);
-        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-        //TextView titleView = (TextView) view.findViewById(R.id.com_facebook_picker_title);
-        TextView titleView = (TextView) view.findViewById(Utility.resId_pickerTitle);
+        TextView titleView = (TextView) view.findViewById(R.id.com_facebook_picker_title);
         if (titleView != null) {
             titleView.setText(title, TextView.BufferType.SPANNABLE);
         }
 
         CharSequence subtitle = getSubTitleOfGraphObject(graphObject);
-        //TextView subtitleView = (TextView) view.findViewById(R.id.picker_subtitle);
-        TextView subtitleView = (TextView) view.findViewById(Utility.resId_pickerSubTitle); //TITANIUM
+        TextView subtitleView = (TextView) view.findViewById(R.id.picker_subtitle);
         if (subtitleView != null) {
             if (subtitle != null) {
                 subtitleView.setText(subtitle, TextView.BufferType.SPANNABLE);
@@ -384,8 +370,7 @@ class GraphObjectAdapter<T extends GraphObject> extends BaseAdapter implements S
         }
 
         if (getShowCheckbox()) {
-            //CheckBox checkBox = (CheckBox) view.findViewById(R.id.com_facebook_picker_checkbox);
-            CheckBox checkBox = (CheckBox) view.findViewById(Utility.resId_pickerCheckbox); //TITANIUM
+            CheckBox checkBox = (CheckBox) view.findViewById(R.id.com_facebook_picker_checkbox);
             updateCheckboxState(checkBox, isGraphObjectSelected(id));
         }
 
@@ -393,8 +378,8 @@ class GraphObjectAdapter<T extends GraphObject> extends BaseAdapter implements S
             URI pictureURI = getPictureUriOfGraphObject(graphObject);
 
             if (pictureURI != null) {
-                //ImageView profilePic = (ImageView) view.findViewById(R.id.com_facebook_picker_image);
-                ImageView profilePic = (ImageView) view.findViewById(Utility.resId_pickerImage); //TITANIUM
+                ImageView profilePic = (ImageView) view.findViewById(R.id.com_facebook_picker_image);
+
                 // See if we have already pre-fetched this; if not, download it.
                 if (prefetchedPictureCache.containsKey(id)) {
                     ImageResponse response = prefetchedPictureCache.get(id);
@@ -443,16 +428,14 @@ class GraphObjectAdapter<T extends GraphObject> extends BaseAdapter implements S
     String getPictureFieldSpecifier() {
         // How big is our image?
         View view = createGraphObjectView(null);
-        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-        //ImageView picture = (ImageView) view.findViewById(R.id.com_facebook_picker_image);
-        ImageView picture = (ImageView) view.findViewById(Utility.resId_pickerImage);
+        ImageView picture = (ImageView) view.findViewById(R.id.com_facebook_picker_image);
         if (picture == null) {
             return null;
         }
 
         // Note: these dimensions are in pixels, not dips
         ViewGroup.LayoutParams layoutParams = picture.getLayoutParams();
-        return String.format("picture.height(%d).width(%d)", layoutParams.height, layoutParams.width);
+        return String.format(Locale.US, "picture.height(%d).width(%d)", layoutParams.height, layoutParams.width);
     }
 
 

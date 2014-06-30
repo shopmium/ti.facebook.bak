@@ -26,11 +26,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import com.facebook.*;
+import com.facebook.android.R;
 import com.facebook.internal.AnalyticsEvents;
 import com.facebook.internal.ImageDownloader;
 import com.facebook.internal.ImageRequest;
 import com.facebook.internal.ImageResponse;
-import com.facebook.internal.Utility;
 import com.facebook.model.GraphUser;
 
 import java.net.URI;
@@ -55,7 +55,7 @@ public class UserSettingsFragment extends FacebookFragment {
     private static final String ID = "id";
     private static final String PICTURE = "picture";
     private static final String FIELDS = "fields";
-
+    
     private static final String REQUEST_FIELDS = TextUtils.join(",", new String[] {ID, NAME, PICTURE});
 
     private LoginButton loginButton;
@@ -69,11 +69,8 @@ public class UserSettingsFragment extends FacebookFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-        //View view = inflater.inflate(R.layout.com_facebook_usersettingsfragment, container, false);
-        //loginButton = (LoginButton) view.findViewById(R.id.com_facebook_usersettingsfragment_login_button);
-        View view = inflater.inflate(Utility.resId_userSettingsFragment, container, false);
-        loginButton = (LoginButton) view.findViewById(Utility.resId_userSettingsFragmentLoginButton); //TITANIUM
+        View view = inflater.inflate(R.layout.com_facebook_usersettingsfragment, container, false);
+        loginButton = (LoginButton) view.findViewById(R.id.com_facebook_usersettingsfragment_login_button);
         loginButton.setProperties(loginButtonProperties);
         loginButton.setFragment(this);
         loginButton.setLoginLogoutEventName(AnalyticsEvents.EVENT_USER_SETTINGS_USAGE);
@@ -82,12 +79,11 @@ public class UserSettingsFragment extends FacebookFragment {
         if (session != null && !session.equals(Session.getActiveSession())) {
             loginButton.setSession(session);
         }
-        //connectedStateLabel = (TextView) view.findViewById(R.id.com_facebook_usersettingsfragment_profile_name);
-        connectedStateLabel = (TextView) view.findViewById(Utility.resId_userSettingsFragmentProfileName); //TITANIUM
+        connectedStateLabel = (TextView) view.findViewById(R.id.com_facebook_usersettingsfragment_profile_name);
+        
         // if no background is set for some reason, then default to Facebook blue
         if (view.getBackground() == null) {
-            //view.setBackgroundColor(getResources().getColor(R.color.com_facebook_blue));
-            view.setBackgroundColor(getResources().getColor(Utility.resId_blueColor)); //TITANIUM
+            view.setBackgroundColor(getResources().getColor(R.color.com_facebook_blue));
         } else {
             view.getBackground().setDither(true);
         }
@@ -369,19 +365,16 @@ public class UserSettingsFragment extends FacebookFragment {
             user = null;
         }
     }
-
+    
     private void updateUI() {
         if (!isAdded()) {
             return;
         }
         if (isSessionOpen()) {
-            // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-            //connectedStateLabel.setTextColor(getResources().getColor(R.color.com_facebook_usersettingsfragment_connected_text_color));
-            connectedStateLabel.setTextColor(getResources().getColor(Utility.resId_userSettingsFragmentConnectedTextColor));
-            //connectedStateLabel.setShadowLayer(1f, 0f, -1f,
-                    //getResources().getColor(R.color.com_facebook_usersettingsfragment_connected_shadow_color));
+            connectedStateLabel.setTextColor(getResources().getColor(R.color.com_facebook_usersettingsfragment_connected_text_color));
             connectedStateLabel.setShadowLayer(1f, 0f, -1f,
-                    getResources().getColor(Utility.resId_userSettingsFragmentConnectedShadowColor));
+                    getResources().getColor(R.color.com_facebook_usersettingsfragment_connected_shadow_color));
+            
             if (user != null) {
                 ImageRequest request = getImageRequest();
                 if (request != null) {
@@ -398,29 +391,20 @@ public class UserSettingsFragment extends FacebookFragment {
                 }
                 connectedStateLabel.setText(user.getName());
             } else {
-                //connectedStateLabel.setText(getResources().getString(
-                        //R.string.com_facebook_usersettingsfragment_logged_in));
-                //Drawable noProfilePic = getResources().getDrawable(R.drawable.com_facebook_profile_default_icon);
-                connectedStateLabel.setText(getResources().getString(Utility.resId_userSettingsFragmentLoggedIn)); //TITANIUM
-                Drawable noProfilePic = getResources().getDrawable(Utility.resId_profileDefaultIcon);
-
-                //noProfilePic.setBounds(0, 0,
-                        //getResources().getDimensionPixelSize(R.dimen.com_facebook_usersettingsfragment_profile_picture_width),
-                        //getResources().getDimensionPixelSize(R.dimen.com_facebook_usersettingsfragment_profile_picture_height));
+                connectedStateLabel.setText(getResources().getString(
+                        R.string.com_facebook_usersettingsfragment_logged_in));
+                Drawable noProfilePic = getResources().getDrawable(R.drawable.com_facebook_profile_default_icon);
                 noProfilePic.setBounds(0, 0,
-                        getResources().getDimensionPixelSize(Utility.resId_userSettingsFragmentProfilePictureWidth),
-                        getResources().getDimensionPixelSize(Utility.resId_userSettingsFragmentProfilePictureHeight)); //TITANIUM
+                        getResources().getDimensionPixelSize(R.dimen.com_facebook_usersettingsfragment_profile_picture_width),
+                        getResources().getDimensionPixelSize(R.dimen.com_facebook_usersettingsfragment_profile_picture_height));
                 connectedStateLabel.setCompoundDrawables(null, noProfilePic, null, null);
             }
         } else {
-            //int textColor = getResources().getColor(R.color.com_facebook_usersettingsfragment_not_connected_text_color);
-            int textColor = getResources().getColor(Utility.resId_userSettingsFragmentNotConnectedTextColor); //TITANIUM
+            int textColor = getResources().getColor(R.color.com_facebook_usersettingsfragment_not_connected_text_color);
             connectedStateLabel.setTextColor(textColor);
             connectedStateLabel.setShadowLayer(0f, 0f, 0f, textColor);
-            //connectedStateLabel.setText(getResources().getString(
-                    //R.string.com_facebook_usersettingsfragment_not_logged_in));
             connectedStateLabel.setText(getResources().getString(
-                    Utility.resId_userSettingsFragmentNotLoggedIn)); //TITANIUM
+                    R.string.com_facebook_usersettingsfragment_not_logged_in));
             connectedStateLabel.setCompoundDrawables(null, null, null, null);
             connectedStateLabel.setTag(null);
         }
@@ -431,14 +415,10 @@ public class UserSettingsFragment extends FacebookFragment {
         try {
             ImageRequest.Builder requestBuilder = new ImageRequest.Builder(
                     getActivity(),
-                    //ImageRequest.getProfilePictureUrl(
-                            //user.getId(),
-                            //getResources().getDimensionPixelSize(R.dimen.com_facebook_usersettingsfragment_profile_picture_width),
-                            //getResources().getDimensionPixelSize(R.dimen.com_facebook_usersettingsfragment_profile_picture_height)));
                     ImageRequest.getProfilePictureUrl(
                             user.getId(),
-                            getResources().getDimensionPixelSize(Utility.resId_userSettingsFragmentProfilePictureWidth),
-                            getResources().getDimensionPixelSize(Utility.resId_userSettingsFragmentProfilePictureHeight)));
+                            getResources().getDimensionPixelSize(R.dimen.com_facebook_usersettingsfragment_profile_picture_width),
+                            getResources().getDimensionPixelSize(R.dimen.com_facebook_usersettingsfragment_profile_picture_height)));
 
             request = requestBuilder.setCallerTag(this)
                     .setCallback(
@@ -459,13 +439,9 @@ public class UserSettingsFragment extends FacebookFragment {
             Bitmap bitmap = response.getBitmap();
             if (bitmap != null) {
                 BitmapDrawable drawable = new BitmapDrawable(UserSettingsFragment.this.getResources(), bitmap);
-                // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-                //drawable.setBounds(0, 0,
-                        //getResources().getDimensionPixelSize(R.dimen.com_facebook_usersettingsfragment_profile_picture_width),
-                        //getResources().getDimensionPixelSize(R.dimen.com_facebook_usersettingsfragment_profile_picture_height));
-                 drawable.setBounds(0, 0,
-                    getResources().getDimensionPixelSize(Utility.resId_userSettingsFragmentProfilePictureWidth),
-                    getResources().getDimensionPixelSize(Utility.resId_userSettingsFragmentProfilePictureHeight));
+                drawable.setBounds(0, 0,
+                        getResources().getDimensionPixelSize(R.dimen.com_facebook_usersettingsfragment_profile_picture_width),
+                        getResources().getDimensionPixelSize(R.dimen.com_facebook_usersettingsfragment_profile_picture_height));
                 userProfilePic = drawable;
                 userProfilePicID = id;
                 connectedStateLabel.setCompoundDrawables(null, drawable, null, null);

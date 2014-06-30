@@ -16,17 +16,17 @@
 
 package com.facebook.widget;
 
-//import android.annotation.SuppressLint;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.res.TypedArray;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import com.facebook.internal.Utility;
 import com.facebook.AppEventsLogger;
 import com.facebook.FacebookException;
 import com.facebook.Request;
 import com.facebook.Session;
+import com.facebook.android.R;
 import com.facebook.internal.AnalyticsEvents;
 import com.facebook.model.GraphUser;
 
@@ -69,13 +69,9 @@ public class FriendPickerFragment extends PickerFragment<GraphUser> {
      * @param args  a Bundle that optionally contains one or more values containing additional
      *              configuration information for the Fragment.
      */
-    // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-    // Comment out @SuppressLint since it is only for API 16+
-    //@SuppressLint("ValidFragment")
+    @SuppressLint("ValidFragment")
     public FriendPickerFragment(Bundle args) {
-        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-        //super(GraphUser.class, R.layout.com_facebook_friendpickerfragment, args);
-        super(GraphUser.class, Utility.resId_friendPickerFragment, args);
+        super(GraphUser.class, R.layout.com_facebook_friendpickerfragment, args);
         setFriendPickerSettingsFromBundle(args);
     }
 
@@ -163,13 +159,10 @@ public class FriendPickerFragment extends PickerFragment<GraphUser> {
     @Override
     public void onInflate(Activity activity, AttributeSet attrs, Bundle savedInstanceState) {
         super.onInflate(activity, attrs, savedInstanceState);
-        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-        //TypedArray a = activity.obtainStyledAttributes(attrs, R.styleable.com_facebook_friend_picker_fragment);
+        TypedArray a = activity.obtainStyledAttributes(attrs, R.styleable.com_facebook_friend_picker_fragment);
 
-        //setMultiSelect(a.getBoolean(R.styleable.com_facebook_friend_picker_fragment_multi_select, multiSelect));
+        setMultiSelect(a.getBoolean(R.styleable.com_facebook_friend_picker_fragment_multi_select, multiSelect));
 
-        TypedArray a = activity.obtainStyledAttributes(attrs, getResources().getIntArray(Utility.resId_friendPickerFragmentStyleable));
-        setMultiSelect(a.getBoolean(Utility.resId_friendPickerFragmentMultiSelect, multiSelect));
         a.recycle();
     }
 
@@ -192,16 +185,12 @@ public class FriendPickerFragment extends PickerFragment<GraphUser> {
 
             @Override
             protected int getGraphObjectRowLayoutId(GraphUser graphObject) {
-                // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-                //return R.layout.com_facebook_picker_list_row;
-                return Utility.resId_pickerListRow;
+                return R.layout.com_facebook_picker_list_row;
             }
 
             @Override
             protected int getDefaultPicture() {
-                // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-                //return R.drawable.com_facebook_profile_default_icon;
-                return Utility.resId_profileDefaultIcon;
+                return R.drawable.com_facebook_profile_default_icon;
             }
 
         };
@@ -235,9 +224,7 @@ public class FriendPickerFragment extends PickerFragment<GraphUser> {
 
     @Override
     String getDefaultTitleText() {
-        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-        //return getString(R.string.com_facebook_choose_friends);
-        return getString(Utility.resId_chooseFriends); // TITANIUM
+        return getString(R.string.com_facebook_choose_friends);
     }
 
     @Override

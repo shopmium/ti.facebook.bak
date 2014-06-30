@@ -14,25 +14,9 @@
  * limitations under the License.
  */
 
-/**
-  * MODIFICATIONS
-  *
-  * Facebook Module
-  * Copyright (c) 20092013 by Appcelerator, Inc. All Rights Reserved.
-  * Please see the LICENSE included with this distribution for details.
-  */
-
- /**
-  * NOTES
-  * Modifications made for Titanium:
-  * - In FacebookRequestError(), fetch resource ids using Resources.getIdentifier.
-  *
-  * Original file this is based on:
-  * https://github.com/facebook/facebook-android-sdk/blob/4e2e6b90fbc964ca51a81e83e802bb4a62711a78/facebook/src/com/facebook/FacebookRequestError.java
-  */
-
 package com.facebook;
 
+import com.facebook.android.R;
 import com.facebook.internal.Utility;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -157,27 +141,21 @@ public final class FacebookRequestError {
                 errorCategory = Category.THROTTLING;
             } else if (errorCode == EC_PERMISSION_DENIED || EC_RANGE_PERMISSION.contains(errorCode)) {
                 errorCategory = Category.PERMISSION;
-                // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-                //messageId = R.string.com_facebook_requesterror_permissions;
-                messageId = Utility.resId_requestErrorPermissions;
+                messageId = R.string.com_facebook_requesterror_permissions;
             } else if (errorCode == EC_INVALID_SESSION || errorCode == EC_INVALID_TOKEN) {
                 if (subErrorCode == EC_USER_CHECKPOINTED || subErrorCode == EC_UNCONFIRMED_USER) {
                     errorCategory = Category.AUTHENTICATION_RETRY;
-                    //messageId = R.string.com_facebook_requesterror_web_login;
-                    messageId = Utility.resId_requestErrorWebLogin;
+                    messageId = R.string.com_facebook_requesterror_web_login;
                     shouldNotify = true;
                 } else {
                     errorCategory = Category.AUTHENTICATION_REOPEN_SESSION;
 
                     if ((subErrorCode == EC_APP_NOT_INSTALLED) || (subErrorCode == EC_EXPIRED)) {
-                        //messageId = R.string.com_facebook_requesterror_relogin;
-                        messageId = Utility.resId_requestErrorRelogin;
+                        messageId = R.string.com_facebook_requesterror_relogin;
                     } else if (subErrorCode == EC_PASSWORD_CHANGED) {
-                        //messageId = R.string.com_facebook_requesterror_password_changed;
-                        messageId = Utility.resId_requestErrorPasswordChanged;
+                        messageId = R.string.com_facebook_requesterror_password_changed;
                     } else {
-                        //messageId = R.string.com_facebook_requesterror_reconnect;
-                        messageId = Utility.resId_requestErrorReconnect;
+                        messageId = R.string.com_facebook_requesterror_reconnect;
                         shouldNotify = true;
                     }
                 }

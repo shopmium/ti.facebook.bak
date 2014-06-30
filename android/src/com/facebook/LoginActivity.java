@@ -16,13 +16,12 @@
 
 package com.facebook;
 
-import com.facebook.internal.Utility;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import com.facebook.android.R;
 
 /**
  * This Activity is a necessary part of the overall Facebook login process
@@ -55,10 +54,7 @@ public class LoginActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-        //setContentView(R.layout.com_facebook_login_activity_layout);
-        setContentView(Utility.resId_loginActivityLayout);
+        setContentView(R.layout.com_facebook_login_activity_layout);
 
         if (savedInstanceState != null) {
             callingPackage = savedInstanceState.getString(SAVED_CALLING_PKG_KEY);
@@ -79,15 +75,12 @@ public class LoginActivity extends Activity {
         authorizationClient.setBackgroundProcessingListener(new AuthorizationClient.BackgroundProcessingListener() {
             @Override
             public void onBackgroundProcessingStarted() {
-                // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-                //findViewById(R.id.com_facebook_login_activity_progress_bar).setVisibility(View.VISIBLE);
-                findViewById(Utility.resId_loginActivityProgressBar).setVisibility(View.VISIBLE);
+                findViewById(R.id.com_facebook_login_activity_progress_bar).setVisibility(View.VISIBLE);
             }
 
             @Override
             public void onBackgroundProcessingStopped() {
-                //findViewById(R.id.com_facebook_login_activity_progress_bar).setVisibility(View.GONE);
-                findViewById(Utility.resId_loginActivityProgressBar).setVisibility(View.GONE);
+                findViewById(R.id.com_facebook_login_activity_progress_bar).setVisibility(View.GONE);
             }
         });
     }
@@ -129,9 +122,7 @@ public class LoginActivity extends Activity {
         super.onPause();
 
         authorizationClient.cancelCurrentHandler();
-        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-        //findViewById(R.id.com_facebook_login_activity_progress_bar).setVisibility(View.GONE);
-        findViewById(Utility.resId_loginActivityProgressBar).setVisibility(View.GONE);
+        findViewById(R.id.com_facebook_login_activity_progress_bar).setVisibility(View.GONE);
     }
 
     @Override

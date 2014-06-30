@@ -17,9 +17,6 @@
 package com.facebook.internal;
 
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -37,6 +34,8 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URLConnection;
 import java.security.MessageDigest;
@@ -56,9 +55,14 @@ public final class Utility {
     private static final String URL_SCHEME = "https";
     private static final String SUPPORTS_ATTRIBUTION = "supports_attribution";
     private static final String SUPPORTS_IMPLICIT_SDK_LOGGING = "supports_implicit_sdk_logging";
+    private static final String NUX_CONTENT = "gdpv4_nux_content";
+    private static final String NUX_ENABLED = "gdpv4_nux_enabled";
+
     private static final String [] APP_SETTING_FIELDS = new String[] {
             SUPPORTS_ATTRIBUTION,
-            SUPPORTS_IMPLICIT_SDK_LOGGING
+            SUPPORTS_IMPLICIT_SDK_LOGGING,
+            NUX_CONTENT,
+            NUX_ENABLED
     };
     private static final String APPLICATION_FIELDS = "fields";
 
@@ -71,10 +75,17 @@ public final class Utility {
     public static class FetchedAppSettings {
         private boolean supportsAttribution;
         private boolean supportsImplicitLogging;
+        private String nuxContent;
+        private boolean nuxEnabled;
 
-        private FetchedAppSettings(boolean supportsAttribution, boolean supportsImplicitLogging) {
+        private FetchedAppSettings(boolean supportsAttribution,
+                                   boolean supportsImplicitLogging,
+                                   String nuxContent,
+                                   boolean nuxEnabled) {
             this.supportsAttribution = supportsAttribution;
             this.supportsImplicitLogging = supportsImplicitLogging;
+            this.nuxContent = nuxContent;
+            this.nuxEnabled = nuxEnabled;
         }
 
         public boolean supportsAttribution() {
@@ -84,104 +95,15 @@ public final class Utility {
         public boolean supportsImplicitLogging() {
             return supportsImplicitLogging;
         }
+
+        public String getNuxContent() {
+            return nuxContent;
+        }
+
+        public boolean getNuxEnabled() {
+            return nuxEnabled;
+        }
     }
-
-    // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-    // Set ENABLE_LOG to true to enable log output. Remember to turn this back off
-    // before releasing. Sending sensitive data to log is a security risk.
-    private static boolean ENABLE_LOG = false;
-
-    // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-    // Resource IDs used in com.facebook package. Fetch the resource id using Resources.getIdentifier, since
-    // we merge resources into Titanium project and don't have access to R here.
-    public static int resId_blueColor = -1;
-    public static int resId_chooseFriends = -1;
-    public static int resId_close = -1;
-    public static int resId_errorMessage = -1;
-    public static int resId_errorTitle = -1;
-    public static int resId_friendPickerFragment = -1;
-    public static int resId_friendPickerFragmentMultiSelect = -1;
-    public static int resId_friendPickerFragmentStyleable = -1;
-    public static int resId_inverseIcon = -1;
-    public static int resId_loading = -1;
-    public static int resId_loginActivityLayout = -1;
-    public static int resId_loginActivityProgressBar = -1;
-    public static int resId_loginButtonImage = -1;
-    public static int resId_loginView = -1;
-    public static int resId_loginViewCancelAction = -1;
-    public static int resId_loginviewCompoundPadding = -1;
-    public static int resId_loginViewConfirmLogout = -1;
-    public static int resId_loginViewFetchUserInfo = -1;
-    public static int resId_loginViewHeight = -1;
-    public static int resId_loginViewPaddingBottom = -1;
-    public static int resId_loginViewPaddingLeft = -1;
-    public static int resId_loginViewPaddingRight = -1;
-    public static int resId_loginViewPaddingTop = -1;
-    public static int resId_loginViewTextColor = -1;
-    public static int resId_loginViewTextSize = -1;
-    public static int resId_loginViewLoggedInAs = -1;
-    public static int resId_loginViewLoggedUsingFacebook = -1;
-    public static int resId_loginViewLoginButton = -1;
-    public static int resId_loginViewLoginText = -1;
-    public static int resId_loginViewLogoutAction = -1;
-    public static int resId_loginViewLogoutButton = -1;
-    public static int resId_loginViewLogoutText = -1;
-    public static int resId_loginViewWidth = -1;
-    public static int resId_nearby = -1;
-    public static int resId_pickerActivityCircle = -1;
-    public static int resId_pickerCheckbox = -1;
-    public static int resId_pickerCheckboxStub = -1;
-    public static int resId_pickerDoneButton = -1;
-    public static int resId_pickerDoneButtonText = -1;
-    public static int resId_pickerImage = -1;
-    public static int resId_pickerListRow = -1;
-    public static int resId_pickerListSectionHeader = -1;
-    public static int resId_pickerListView = -1;
-    public static int resId_pickerProfilePicStub = -1;
-    public static int resId_pickerRowActivityCircle = -1;
-    public static int resId_pickerSearchBox = -1;
-    public static int resId_pickerSearchText = -1;
-    public static int resId_pickerSubTitle = -1;
-    public static int resId_pickerTitle = -1;
-    public static int resId_pickerTitleBar = -1;
-    public static int resId_pickerTitleBarStub = -1;
-    public static int resId_placeDefaultIcon = -1;
-    public static int resId_placePickerFragment = -1;
-    public static int resId_placePickerFragmentAttrs = -1;
-    public static int resId_placePickerFragmentListRow = -1;
-    public static int resId_placePickerFragmentRadiusInMeters = -1;
-    public static int resId_placePickerFragmentResultsLimit = -1;
-    public static int resId_placePickerFragmentSearchBoxStub = -1;
-    public static int resId_placePickerFragmentSearchText = -1;
-    public static int resId_placePickerFragmentShowSearchBox = -1;
-    public static int resId_placePickerSubtitleCatalogOnlyFormat = -1;
-    public static int resId_placePickerSubtitleFormat = -1;
-    public static int resId_placePickerSubtitleWereHereOnlyFormat = -1;
-    public static int resId_profileDefaultIcon = -1;
-    public static int resId_profilePictureBlankPortrait = -1;
-    public static int resId_profilePictureBlankSquare = -1;
-    public static int resId_profilePictureIsCropped = -1;
-    public static int resId_profilePictureLarge = -1;
-    public static int resId_profilePictureNormal = -1;
-    public static int resId_profilePicturePresetSize = -1;
-    public static int resId_profilePictureSmall = -1;
-    public static int resId_profilePictureView = -1;
-    public static int resId_requestErrorPasswordChanged = -1;
-    public static int resId_requestErrorPermissions = -1;
-    public static int resId_requestErrorReconnect = -1;
-    public static int resId_requestErrorRelogin = -1;
-    public static int resId_requestErrorWebLogin = -1;
-    //public static int resId_searchBox = -1;
-    public static int resId_userSettingsFragment = -1;
-    public static int resId_userSettingsFragmentConnectedShadowColor = -1;
-    public static int resId_userSettingsFragmentConnectedTextColor = -1;
-    public static int resId_userSettingsFragmentLoggedIn = -1;
-    public static int resId_userSettingsFragmentLoginButton = -1;
-    public static int resId_userSettingsFragmentNotConnectedTextColor = -1;
-    public static int resId_userSettingsFragmentNotLoggedIn = -1;
-    public static int resId_userSettingsFragmentProfileName = -1;
-    public static int resId_userSettingsFragmentProfilePictureHeight = -1;
-    public static int resId_userSettingsFragmentProfilePictureWidth = -1;
 
     // Returns true iff all items in subset are in superset, treating null and
     // empty collections as
@@ -224,19 +146,30 @@ public final class Utility {
         return hashWithAlgorithm(HASH_ALGORITHM_MD5, key);
     }
 
-    private static String sha1hash(String key) {
+    static String sha1hash(String key) {
         return hashWithAlgorithm(HASH_ALGORITHM_SHA1, key);
     }
 
+    static String sha1hash(byte[] bytes) {
+        return hashWithAlgorithm(HASH_ALGORITHM_SHA1, bytes);
+    }
+
     private static String hashWithAlgorithm(String algorithm, String key) {
-        MessageDigest hash = null;
+        return hashWithAlgorithm(algorithm, key.getBytes());
+    }
+
+    private static String hashWithAlgorithm(String algorithm, byte[] bytes) {
+        MessageDigest hash;
         try {
             hash = MessageDigest.getInstance(algorithm);
         } catch (NoSuchAlgorithmException e) {
             return null;
         }
+        return hashBytes(hash, bytes);
+    }
 
-        hash.update(key.getBytes());
+    private static String hashBytes(MessageDigest hash, byte[] bytes) {
+        hash.update(bytes);
         byte[] digest = hash.digest();
         StringBuilder builder = new StringBuilder();
         for (int b : digest) {
@@ -291,17 +224,9 @@ public final class Utility {
     public static String getMetadataApplicationId(Context context) {
         Validate.notNull(context, "context");
 
-        try {
-            ApplicationInfo ai = context.getPackageManager().getApplicationInfo(
-                    context.getPackageName(), PackageManager.GET_META_DATA);
-            if (ai.metaData != null) {
-                return ai.metaData.getString(Session.APPLICATION_ID_PROPERTY);
-            }
-        } catch (PackageManager.NameNotFoundException e) {
-            // if we can't find it in the manifest, just return null
-        }
+        Settings.loadDefaultsFromMetadata(context);
 
-        return null;
+        return Settings.getApplicationId();
     }
 
     static Map<String, Object> convertJSONObjectToHashMap(JSONObject jsonObject) {
@@ -457,7 +382,10 @@ public final class Utility {
         GraphObject supportResponse = request.executeAndWait().getGraphObject();
         FetchedAppSettings result = new FetchedAppSettings(
                 safeGetBooleanFromResponse(supportResponse, SUPPORTS_ATTRIBUTION),
-                safeGetBooleanFromResponse(supportResponse, SUPPORTS_IMPLICIT_SDK_LOGGING));
+                safeGetBooleanFromResponse(supportResponse, SUPPORTS_IMPLICIT_SDK_LOGGING),
+                safeGetStringFromResponse(supportResponse, NUX_CONTENT),
+                safeGetBooleanFromResponse(supportResponse, NUX_ENABLED)
+                );
 
         fetchedAppSettings.put(applicationId, result);
 
@@ -473,6 +401,17 @@ public final class Utility {
             result = false;
         }
         return (Boolean) result;
+    }
+
+    private static String safeGetStringFromResponse(GraphObject response, String propertyName) {
+        Object result = "";
+        if (response != null) {
+            result = response.getProperty(propertyName);
+        }
+        if (!(result instanceof String)) {
+            result = "";
+        }
+        return (String) result;
     }
 
     public static void clearCaches(Context context) {
@@ -502,99 +441,6 @@ public final class Utility {
         return result;
     }
 
-    public static void loadResourceIds(Context context) {
-       String packageName = context.getPackageName();
-       Resources resources = context.getResources();
-
-       resId_blueColor = resources.getIdentifier("com_facebook_blue", "color", packageName);
-       resId_chooseFriends = resources.getIdentifier("com_facebook_choose_friends", "string", packageName);
-       resId_close = resources.getIdentifier("com_facebook_close", "drawable", packageName);
-       resId_errorMessage = resources.getIdentifier("com_facebook_internet_permission_error_message", "string", packageName);
-       resId_errorTitle = resources.getIdentifier("com_facebook_internet_permission_error_title", "string", packageName);
-       resId_friendPickerFragment = resources.getIdentifier("com_facebook_friendpickerfragment", "layout", packageName);
-       resId_friendPickerFragmentMultiSelect = resources.getIdentifier("com_facebook_friend_picker_fragment_multi_select", "styleable", packageName);
-       resId_friendPickerFragmentStyleable = resources.getIdentifier("com_facebook_friend_picker_fragment", "styleable", packageName);
-       resId_inverseIcon = resources.getIdentifier("com_facebook_inverse_icon", "drawable", packageName);
-       resId_loading = resources.getIdentifier("com_facebook_loading", "string", packageName);
-       resId_loginActivityLayout = resources.getIdentifier("com_facebook_login_activity_layout", "layout", packageName);
-       resId_loginActivityProgressBar = resources.getIdentifier("com_facebook_login_activity_progress_bar", "id", packageName);
-       resId_loginButtonImage = resources.getIdentifier("com_facebook_loginbutton_blue", "drawable", packageName);
-       resId_loginView = resources.getIdentifier("com_facebook_login_view", "styleable", packageName);
-       resId_loginViewCancelAction = resources.getIdentifier("com_facebook_loginview_cancel_action", "string", packageName);
-       resId_loginviewCompoundPadding = resources.getIdentifier("com_facebook_loginview_compound_drawable_padding", "dimen", packageName);
-       resId_loginViewConfirmLogout = resources.getIdentifier("com_facebook_login_view_confirm_logout", "styleable", packageName);
-       resId_loginViewFetchUserInfo = resources.getIdentifier("com_facebook_login_view_fetch_user_info", "styleable", packageName);
-       resId_loginViewHeight = resources.getIdentifier("com_facebook_loginview_height", "dimen", packageName);
-       resId_loginViewPaddingBottom = resources.getIdentifier("com_facebook_loginview_padding_bottom", "dimen", packageName);
-       resId_loginViewPaddingLeft = resources.getIdentifier("com_facebook_loginview_padding_left", "dimen", packageName);
-       resId_loginViewPaddingRight = resources.getIdentifier("com_facebook_loginview_padding_right", "dimen", packageName);
-       resId_loginViewPaddingTop = resources.getIdentifier("com_facebook_loginview_padding_top", "dimen", packageName);
-       resId_loginViewTextColor = resources.getIdentifier("com_facebook_loginview_text_color", "color", packageName);
-       resId_loginViewTextSize = resources.getIdentifier("com_facebook_loginview_text_size", "dimen", packageName);
-       resId_loginViewLoggedInAs = resources.getIdentifier("com_facebook_loginview_logged_in_as", "string", packageName);
-       resId_loginViewLoggedUsingFacebook = resources.getIdentifier("com_facebook_loginview_logged_in_using_facebook", "string", packageName);
-       resId_loginViewLoginButton = resources.getIdentifier("com_facebook_loginview_log_in_button", "string", packageName);
-       resId_loginViewLoginText = resources.getIdentifier("com_facebook_login_view_login_text", "styleable", packageName);
-       resId_loginViewLogoutAction = resources.getIdentifier("com_facebook_loginview_log_out_action", "string", packageName);
-       resId_loginViewLogoutButton = resources.getIdentifier("com_facebook_loginview_log_out_button", "string", packageName);
-       resId_loginViewLogoutText = resources.getIdentifier("com_facebook_login_view_logout_text", "styleable", packageName);
-       resId_loginViewWidth = resources.getIdentifier("com_facebook_loginview_width", "dimen", packageName);
-       resId_nearby = resources.getIdentifier("com_facebook_nearby", "string", packageName);
-       resId_pickerActivityCircle = resources.getIdentifier("com_facebook_picker_activity_circle", "id", packageName);
-       resId_pickerCheckbox = resources.getIdentifier("com_facebook_picker_checkbox", "id", packageName);
-       resId_pickerCheckboxStub = resources.getIdentifier("com_facebook_picker_checkbox_stub", "id", packageName);
-       resId_pickerDoneButton = resources.getIdentifier("com_facebook_picker_done_button", "id", packageName);
-       resId_pickerDoneButtonText = resources.getIdentifier("com_facebook_picker_done_button_text", "id", packageName);
-       resId_pickerImage = resources.getIdentifier("com_facebook_picker_image", "image", packageName);
-       resId_pickerListRow = resources.getIdentifier("com_facebook_picker_list_row", "layout", packageName);
-       resId_pickerListSectionHeader = resources.getIdentifier("com_facebook_picker_list_section_header", "layout", packageName);
-       resId_pickerListView = resources.getIdentifier("com_facebook_picker_list_view", "id", packageName);
-       resId_pickerProfilePicStub = resources.getIdentifier("com_facebook_picker_profile_pic_stub", "id", packageName);
-       resId_pickerRowActivityCircle = resources.getIdentifier("com_facebook_picker_row_activity_circle", "id", packageName);
-       resId_pickerSearchBox = resources.getIdentifier("com_facebook_picker_search_box", "id", packageName);
-       resId_pickerSearchText = resources.getIdentifier("com_facebook_picker_search_text", "id", packageName);
-       resId_pickerSubTitle = resources.getIdentifier("picker_subtitle", "id", packageName);
-       resId_pickerTitle = resources.getIdentifier("com_facebook_picker_title", "id", packageName);
-       resId_pickerTitleBar = resources.getIdentifier("com_facebook_picker_title_bar", "id", packageName);
-       resId_pickerTitleBarStub = resources.getIdentifier("com_facebook_picker_title_bar_stub", "id", packageName);
-       resId_placeDefaultIcon = resources.getIdentifier("com_facebook_place_default_icon", "drawable", packageName);
-       resId_placePickerFragment = resources.getIdentifier("com_facebook_placepickerfragment", "layout", packageName);
-       resId_placePickerFragmentAttrs = resources.getIdentifier("com_facebook_place_picker_fragment", "styleable", packageName);
-       resId_placePickerFragmentListRow = resources.getIdentifier("com_facebook_placepickerfragment_list_row", "layout", packageName);
-       resId_placePickerFragmentRadiusInMeters = resources.getIdentifier("com_facebook_place_picker_fragment_radius_in_meters", "styleable", packageName);
-       resId_placePickerFragmentResultsLimit = resources.getIdentifier("com_facebook_place_picker_fragment_results_limit", "styleable", packageName);
-       //resId_placePickerFragmentSearchBoxStub = resources.getIdentifier("com_facebook_placepickerfragment_search_box_stub", "id", packageName);
-       resId_placePickerFragmentSearchText = resources.getIdentifier("com_facebook_place_picker_fragment_search_text", "styleable", packageName);
-       resId_placePickerFragmentShowSearchBox = resources.getIdentifier("com_facebook_place_picker_fragment_show_search_box", "styleable", packageName);
-       resId_placePickerSubtitleCatalogOnlyFormat = resources.getIdentifier("com_facebook_placepicker_subtitle_catetory_only_format", "string", packageName);
-       resId_placePickerSubtitleFormat = resources.getIdentifier("com_facebook_placepicker_subtitle_format", "string", packageName);
-       resId_placePickerSubtitleWereHereOnlyFormat = resources.getIdentifier("com_facebook_placepicker_subtitle_were_here_only_format", "string", packageName);
-       resId_profileDefaultIcon = resources.getIdentifier("com_facebook_profile_default_icon", "drawable", packageName);
-       resId_profilePictureBlankPortrait = resources.getIdentifier("com_facebook_profile_picture_blank_portrait", "drawable", packageName);
-       resId_profilePictureBlankSquare = resources.getIdentifier("com_facebook_profile_picture_blank_square", "drawable", packageName);
-       resId_profilePictureIsCropped = resources.getIdentifier("com_facebook_profile_picture_view_is_cropped", "styleable", packageName);
-       resId_profilePictureLarge = resources.getIdentifier("com_facebook_profilepictureview_preset_size_large", "dimen", packageName);
-       resId_profilePictureNormal = resources.getIdentifier("com_facebook_profilepictureview_preset_size_normal", "dimen", packageName);
-       resId_profilePicturePresetSize = resources.getIdentifier("com_facebook_profile_picture_view_preset_size", "styleable", packageName);
-       resId_profilePictureSmall = resources.getIdentifier("com_facebook_profilepictureview_preset_size_small", "dimen", packageName);
-       resId_profilePictureView = resources.getIdentifier("com_facebook_profile_picture_view", "styleable", packageName);
-       resId_requestErrorPasswordChanged = resources.getIdentifier("com_facebook_requesterror_password_changed", "string", packageName);
-       resId_requestErrorPermissions = resources.getIdentifier("com_facebook_requesterror_permissions", "string", packageName);
-       resId_requestErrorReconnect = resources.getIdentifier("com_facebook_requesterror_reconnect", "string", packageName);
-       resId_requestErrorRelogin = resources.getIdentifier("com_facebook_requesterror_relogin", "string", packageName);
-       resId_requestErrorWebLogin = resources.getIdentifier("com_facebook_requesterror_web_login", "string", packageName);
-       //resId_searchBox = resources.getIdentifier("search_box", "id", packageName);
-       resId_userSettingsFragment = resources.getIdentifier("com_facebook_usersettingsfragment", "layout", packageName);
-       resId_userSettingsFragmentConnectedShadowColor = resources.getIdentifier("com_facebook_usersettingsfragment_connected_shadow_color", "color", packageName);
-       resId_userSettingsFragmentConnectedTextColor = resources.getIdentifier("com_facebook_usersettingsfragment_connected_text_color", "color", packageName);
-       resId_userSettingsFragmentLoggedIn = resources.getIdentifier("com_facebook_usersettingsfragment_logged_in", "string", packageName);
-       resId_userSettingsFragmentLoginButton = resources.getIdentifier("com_facebook_usersettingsfragment_login_button", "id", packageName);
-       resId_userSettingsFragmentNotConnectedTextColor = resources.getIdentifier("com_facebook_usersettingsfragment_not_connected_text_color", "color", packageName);
-       resId_userSettingsFragmentNotLoggedIn = resources.getIdentifier("com_facebook_usersettingsfragment_not_logged_in", "string", packageName);
-       resId_userSettingsFragmentProfileName = resources.getIdentifier("com_facebook_usersettingsfragment_profile_name", "id", packageName);
-       resId_userSettingsFragmentProfilePictureHeight = resources.getIdentifier("com_facebook_usersettingsfragment_profile_picture_height", "dimen", packageName);
-       resId_userSettingsFragmentProfilePictureWidth = resources.getIdentifier("com_facebook_usersettingsfragment_profile_picture_width", "dimen", packageName);
-   }
     // Return a hash of the android_id combined with the appid.  Intended to dedupe requests on the server side
     // in order to do counting of users unknown to Facebook.  Because we put the appid into the key prior to hashing,
     // we cannot do correlation of the same user across multiple apps -- this is intentional.  When we transition to
@@ -610,14 +456,46 @@ public final class Utility {
     }
 
     public static void setAppEventAttributionParameters(GraphObject params,
-            String attributionId, String hashedDeviceAndAppId, boolean limitEventUsage) {
+            AttributionIdentifiers attributionIdentifiers, String hashedDeviceAndAppId, boolean limitEventUsage) {
         // Send attributionID if it exists, otherwise send a hashed device+appid specific value as the advertiser_id.
-        if (attributionId != null) {
-            params.setProperty("attribution", attributionId);
+        if (attributionIdentifiers != null && attributionIdentifiers.getAttributionId() != null) {
+            params.setProperty("attribution", attributionIdentifiers.getAttributionId());
+        }
+
+        if (attributionIdentifiers != null && attributionIdentifiers.getAndroidAdvertiserId() != null) {
+            params.setProperty("advertiser_id", attributionIdentifiers.getAndroidAdvertiserId());
+            params.setProperty("advertiser_tracking_enabled", !attributionIdentifiers.isTrackingLimited());
         } else if (hashedDeviceAndAppId != null) {
             params.setProperty("advertiser_id", hashedDeviceAndAppId);
         }
 
         params.setProperty("application_tracking_enabled", !limitEventUsage);
+    }
+
+    public static Method getMethodQuietly(Class<?> clazz, String methodName, Class<?>... parameterTypes) {
+        try {
+            return clazz.getMethod(methodName, parameterTypes);
+        } catch (NoSuchMethodException ex) {
+            return null;
+        }
+    }
+
+    public static Method getMethodQuietly(String className, String methodName, Class<?>... parameterTypes) {
+        try {
+            Class<?> clazz = Class.forName(className);
+            return getMethodQuietly(clazz, methodName, parameterTypes);
+        } catch (ClassNotFoundException ex) {
+            return null;
+        }
+    }
+
+    public static Object invokeMethodQuietly(Object receiver, Method method, Object... args) {
+        try {
+            return method.invoke(receiver, args);
+        } catch (IllegalAccessException ex) {
+            return null;
+        } catch (InvocationTargetException ex) {
+            return null;
+        }
     }
 }

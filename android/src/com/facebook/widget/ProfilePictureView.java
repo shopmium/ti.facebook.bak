@@ -29,7 +29,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import com.facebook.FacebookException;
 import com.facebook.LoggingBehavior;
-import com.facebook.internal.Utility;
+import com.facebook.android.R;
 import com.facebook.internal.*;
 
 import java.net.URISyntaxException;
@@ -382,13 +382,9 @@ public class ProfilePictureView extends FrameLayout {
     }
 
     private void parseAttributes(AttributeSet attrs) {
-        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-        //TypedArray a = getContext().obtainStyledAttributes(attrs, R.styleable.com_facebook_profile_picture_view);
-        //setPresetSize(a.getInt(R.styleable.com_facebook_profile_picture_view_preset_size, CUSTOM));
-        //isCropped = a.getBoolean(R.styleable.com_facebook_profile_picture_view_is_cropped, IS_CROPPED_DEFAULT_VALUE);
-        TypedArray a = getContext().obtainStyledAttributes(attrs, getResources().getIntArray(Utility.resId_profilePictureView));
-        setPresetSize(a.getInt(Utility.resId_profilePicturePresetSize, CUSTOM));
-        isCropped = a.getBoolean(Utility.resId_profilePictureIsCropped, IS_CROPPED_DEFAULT_VALUE);
+        TypedArray a = getContext().obtainStyledAttributes(attrs, R.styleable.com_facebook_profile_picture_view);
+        setPresetSize(a.getInt(R.styleable.com_facebook_profile_picture_view_preset_size, CUSTOM));
+        isCropped = a.getBoolean(R.styleable.com_facebook_profile_picture_view_is_cropped, IS_CROPPED_DEFAULT_VALUE);
         a.recycle();
     }
 
@@ -407,10 +403,9 @@ public class ProfilePictureView extends FrameLayout {
 
     private void setBlankProfilePicture() {
         if (customizedDefaultProfilePicture == null) {
-          // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
           int blankImageResource = isCropped() ?
-                Utility.resId_profilePictureBlankSquare :
-                Utility.resId_profilePictureBlankPortrait;
+                  R.drawable.com_facebook_profile_picture_blank_square :
+                  R.drawable.com_facebook_profile_picture_blank_portrait;
           setImageBitmap( BitmapFactory.decodeResource(getResources(), blankImageResource));
 	} else {
           // Update profile image dimensions.
@@ -519,24 +514,19 @@ public class ProfilePictureView extends FrameLayout {
         int dimensionId;
         switch (presetSizeType) {
             case SMALL:
-                // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
-                //dimensionId = R.dimen.com_facebook_profilepictureview_preset_size_small;
-                dimensionId = Utility.resId_profilePictureSmall;
+                dimensionId = R.dimen.com_facebook_profilepictureview_preset_size_small;
                 break;
             case NORMAL:
-                //dimensionId = R.dimen.com_facebook_profilepictureview_preset_size_normal;
-                dimensionId = Utility.resId_profilePictureNormal; //TITANIUM
+                dimensionId = R.dimen.com_facebook_profilepictureview_preset_size_normal;
                 break;
             case LARGE:
-                //dimensionId = R.dimen.com_facebook_profilepictureview_preset_size_large
-                dimensionId = Utility.resId_profilePictureLarge; //TITANIUM
+                dimensionId = R.dimen.com_facebook_profilepictureview_preset_size_large;
                 break;
             case CUSTOM:
                 if (!forcePreset) {
                     return ImageRequest.UNSPECIFIED_DIMENSION;
                 } else {
-                    //dimensionId = R.dimen.com_facebook_profilepictureview_preset_size_normal;
-                    dimensionId = Utility.resId_profilePictureNormal; //TITANIUM
+                    dimensionId = R.dimen.com_facebook_profilepictureview_preset_size_normal;
                     break;
                 }
             default:
