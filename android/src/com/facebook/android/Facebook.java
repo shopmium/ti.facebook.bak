@@ -1,18 +1,18 @@
 /**
-* Copyright 2010-present Facebook
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2010-present Facebook
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.facebook.android;
 
@@ -42,20 +42,20 @@ import org.appcelerator.titanium.util.TiActivitySupport;
 
 import com.facebook.Session;
 /**
-* THIS CLASS SHOULD BE CONSIDERED DEPRECATED.
-* <p/>
-* All public members of this class are intentionally deprecated.
-* New code should instead use
-* {@link Session} to manage session state,
-* {@link Request} to make API requests, and
-* {@link com.facebook.widget.WebDialog} to make dialog requests.
-* <p/>
-* Adding @Deprecated to this class causes warnings in other deprecated classes
-* that reference this one. That is the only reason this entire class is not
-* deprecated.
-*
-* @devDocDeprecated
-*/
+ * THIS CLASS SHOULD BE CONSIDERED DEPRECATED.
+ * <p/>
+ * All public members of this class are intentionally deprecated.
+ * New code should instead use
+ * {@link Session} to manage session state,
+ * {@link Request} to make API requests, and
+ * {@link com.facebook.widget.WebDialog} to make dialog requests.
+ * <p/>
+ * Adding @Deprecated to this class causes warnings in other deprecated classes
+ * that reference this one.  That is the only reason this entire class is not
+ * deprecated.
+ *
+ * @devDocDeprecated
+ */
 public class Facebook {
 
     // Strings used in the authorization flow
@@ -113,12 +113,12 @@ public class Facebook {
     final private static long REFRESH_TOKEN_BARRIER = 24L * 60L * 60L * 1000L;
 
     /**
-* Constructor for Facebook object.
-*
-* @param appId
-* Your Facebook application ID. Found at
-* www.facebook.com/developers/apps.php.
-*/
+     * Constructor for Facebook object.
+     *
+     * @param appId
+     *            Your Facebook application ID. Found at
+     *            www.facebook.com/developers/apps.php.
+     */
     @Deprecated
     public Facebook(String appId) {
         if (appId == null) {
@@ -129,12 +129,12 @@ public class Facebook {
     }
 
     /**
-* Default authorize method. Grants only basic permissions.
-* <p/>
-* See authorize() below for @params.
-* <p/>
-* This method is deprecated. See {@link Facebook} and {@link Session} for more info.
-*/
+     * Default authorize method. Grants only basic permissions.
+     * <p/>
+     * See authorize() below for @params.
+     * <p/>
+     * This method is deprecated.  See {@link Facebook} and {@link Session} for more info.
+     */
     @Deprecated
     public void authorize(Activity activity, final DialogListener listener) {
         authorize(activity, new String[]{}, DEFAULT_AUTH_ACTIVITY_CODE, SessionLoginBehavior.SSO_WITH_FALLBACK,
@@ -142,81 +142,81 @@ public class Facebook {
     }
 
     /**
-* Authorize method that grants custom permissions.
-* <p/>
-* See authorize() below for @params.
-* <p/>
-* This method is deprecated. See {@link Facebook} and {@link Session} for more info.
-*/
+     * Authorize method that grants custom permissions.
+     * <p/>
+     * See authorize() below for @params.
+     * <p/>
+     * This method is deprecated.  See {@link Facebook} and {@link Session} for more info.
+     */
     @Deprecated
     public void authorize(Activity activity, String[] permissions, final DialogListener listener) {
         authorize(activity, permissions, DEFAULT_AUTH_ACTIVITY_CODE, SessionLoginBehavior.SSO_WITH_FALLBACK, listener);
     }
 
     /**
-* Full authorize method.
-* <p/>
-* Starts either an Activity or a dialog which prompts the user to log in to
-* Facebook and grant the requested permissions to the given application.
-* <p/>
-* This method will, when possible, use Facebook's single sign-on for
-* Android to obtain an access token. This involves proxying a call through
-* the Facebook for Android stand-alone application, which will handle the
-* authentication flow, and return an OAuth access token for making API
-* calls.
-* <p/>
-* Because this process will not be available for all users, if single
-* sign-on is not possible, this method will automatically fall back to the
-* OAuth 2.0 User-Agent flow. In this flow, the user credentials are handled
-* by Facebook in an embedded WebView, not by the client application. As
-* such, the dialog makes a network request and renders HTML content rather
-* than a native UI. The access token is retrieved from a redirect to a
-* special URL that the WebView handles.
-* <p/>
-* Note that User credentials could be handled natively using the OAuth 2.0
-* Username and Password Flow, but this is not supported by this SDK.
-* <p/>
-* See http://developers.facebook.com/docs/authentication/ and
-* http://wiki.oauth.net/OAuth-2 for more details.
-* <p/>
-* Note that this method is asynchronous and the callback will be invoked in
-* the original calling thread (not in a background thread).
-* <p/>
-* Also note that requests may be made to the API without calling authorize
-* first, in which case only public information is returned.
-* <p/>
-* IMPORTANT: Note that single sign-on authentication will not function
-* correctly if you do not include a call to the authorizeCallback() method
-* in your onActivityResult() function! Please see below for more
-* information. single sign-on may be disabled by passing FORCE_DIALOG_AUTH
-* as the activityCode parameter in your call to authorize().
-* <p/>
-* This method is deprecated. See {@link Facebook} and {@link Session} for more info.
-*
-* @param activity
-* The Android activity in which we want to display the
-* authorization dialog.
-* @param permissions
-* A list of permissions required for this application: e.g.
-* "read_stream", "publish_stream", "offline_access", etc. see
-* http://developers.facebook.com/docs/authentication/permissions
-* This parameter should not be null -- if you do not require any
-* permissions, then pass in an empty String array.
-* @param activityCode
-* Single sign-on requires an activity result to be called back
-* to the client application -- if you are waiting on other
-* activities to return data, pass a custom activity code here to
-* avoid collisions. If you would like to force the use of legacy
-* dialog-based authorization, pass FORCE_DIALOG_AUTH for this
-* parameter. Otherwise just omit this parameter and Facebook
-* will use a suitable default. See
-* http://developer.android.com/reference/android/
-* app/Activity.html for more information.
-* @param listener
-* Callback interface for notifying the calling application when
-* the authentication dialog has completed, failed, or been
-* canceled.
-*/
+     * Full authorize method.
+     * <p/>
+     * Starts either an Activity or a dialog which prompts the user to log in to
+     * Facebook and grant the requested permissions to the given application.
+     * <p/>
+     * This method will, when possible, use Facebook's single sign-on for
+     * Android to obtain an access token. This involves proxying a call through
+     * the Facebook for Android stand-alone application, which will handle the
+     * authentication flow, and return an OAuth access token for making API
+     * calls.
+     * <p/>
+     * Because this process will not be available for all users, if single
+     * sign-on is not possible, this method will automatically fall back to the
+     * OAuth 2.0 User-Agent flow. In this flow, the user credentials are handled
+     * by Facebook in an embedded WebView, not by the client application. As
+     * such, the dialog makes a network request and renders HTML content rather
+     * than a native UI. The access token is retrieved from a redirect to a
+     * special URL that the WebView handles.
+     * <p/>
+     * Note that User credentials could be handled natively using the OAuth 2.0
+     * Username and Password Flow, but this is not supported by this SDK.
+     * <p/>
+     * See http://developers.facebook.com/docs/authentication/ and
+     * http://wiki.oauth.net/OAuth-2 for more details.
+     * <p/>
+     * Note that this method is asynchronous and the callback will be invoked in
+     * the original calling thread (not in a background thread).
+     * <p/>
+     * Also note that requests may be made to the API without calling authorize
+     * first, in which case only public information is returned.
+     * <p/>
+     * IMPORTANT: Note that single sign-on authentication will not function
+     * correctly if you do not include a call to the authorizeCallback() method
+     * in your onActivityResult() function! Please see below for more
+     * information. single sign-on may be disabled by passing FORCE_DIALOG_AUTH
+     * as the activityCode parameter in your call to authorize().
+     * <p/>
+     * This method is deprecated.  See {@link Facebook} and {@link Session} for more info.
+     *
+     * @param activity
+     *            The Android activity in which we want to display the
+     *            authorization dialog.
+     * @param permissions
+     *            A list of permissions required for this application: e.g.
+     *            "read_stream", "publish_stream", "offline_access", etc. see
+     *            http://developers.facebook.com/docs/authentication/permissions
+     *            This parameter should not be null -- if you do not require any
+     *            permissions, then pass in an empty String array.
+     * @param activityCode
+     *            Single sign-on requires an activity result to be called back
+     *            to the client application -- if you are waiting on other
+     *            activities to return data, pass a custom activity code here to
+     *            avoid collisions. If you would like to force the use of legacy
+     *            dialog-based authorization, pass FORCE_DIALOG_AUTH for this
+     *            parameter. Otherwise just omit this parameter and Facebook
+     *            will use a suitable default. See
+     *            http://developer.android.com/reference/android/
+     *            app/Activity.html for more information.
+     * @param listener
+     *            Callback interface for notifying the calling application when
+     *            the authentication dialog has completed, failed, or been
+     *            canceled.
+     */
     @Deprecated
     public void authorize(Activity activity, String[] permissions, int activityCode, final DialogListener listener) {
         SessionLoginBehavior behavior = (activityCode >= 0) ? SessionLoginBehavior.SSO_WITH_FALLBACK
@@ -226,71 +226,71 @@ public class Facebook {
     }
 
     /**
-* Full authorize method.
-*
-* Starts either an Activity or a dialog which prompts the user to log in to
-* Facebook and grant the requested permissions to the given application.
-*
-* This method will, when possible, use Facebook's single sign-on for
-* Android to obtain an access token. This involves proxying a call through
-* the Facebook for Android stand-alone application, which will handle the
-* authentication flow, and return an OAuth access token for making API
-* calls.
-*
-* Because this process will not be available for all users, if single
-* sign-on is not possible, this method will automatically fall back to the
-* OAuth 2.0 User-Agent flow. In this flow, the user credentials are handled
-* by Facebook in an embedded WebView, not by the client application. As
-* such, the dialog makes a network request and renders HTML content rather
-* than a native UI. The access token is retrieved from a redirect to a
-* special URL that the WebView handles.
-*
-* Note that User credentials could be handled natively using the OAuth 2.0
-* Username and Password Flow, but this is not supported by this SDK.
-*
-* See http://developers.facebook.com/docs/authentication/ and
-* http://wiki.oauth.net/OAuth-2 for more details.
-*
-* Note that this method is asynchronous and the callback will be invoked in
-* the original calling thread (not in a background thread).
-*
-* Also note that requests may be made to the API without calling authorize
-* first, in which case only public information is returned.
-*
-* IMPORTANT: Note that single sign-on authentication will not function
-* correctly if you do not include a call to the authorizeCallback() method
-* in your onActivityResult() function! Please see below for more
-* information. single sign-on may be disabled by passing FORCE_DIALOG_AUTH
-* as the activityCode parameter in your call to authorize().
-*
-* @param activity
-* The Android activity in which we want to display the
-* authorization dialog.
-* @param permissions
-* A list of permissions required for this application: e.g.
-* "read_stream", "publish_stream", "offline_access", etc. see
-* http://developers.facebook.com/docs/authentication/permissions
-* This parameter should not be null -- if you do not require any
-* permissions, then pass in an empty String array.
-* @param activityCode
-* Single sign-on requires an activity result to be called back
-* to the client application -- if you are waiting on other
-* activities to return data, pass a custom activity code here to
-* avoid collisions. If you would like to force the use of legacy
-* dialog-based authorization, pass FORCE_DIALOG_AUTH for this
-* parameter. Otherwise just omit this parameter and Facebook
-* will use a suitable default. See
-* http://developer.android.com/reference/android/
-* app/Activity.html for more information.
-* @param behavior
-* The {@link SessionLoginBehavior SessionLoginBehavior} that
-* specifies what behaviors should be attempted during
-* authorization.
-* @param listener
-* Callback interface for notifying the calling application when
-* the authentication dialog has completed, failed, or been
-* canceled.
-*/
+     * Full authorize method.
+     *
+     * Starts either an Activity or a dialog which prompts the user to log in to
+     * Facebook and grant the requested permissions to the given application.
+     *
+     * This method will, when possible, use Facebook's single sign-on for
+     * Android to obtain an access token. This involves proxying a call through
+     * the Facebook for Android stand-alone application, which will handle the
+     * authentication flow, and return an OAuth access token for making API
+     * calls.
+     *
+     * Because this process will not be available for all users, if single
+     * sign-on is not possible, this method will automatically fall back to the
+     * OAuth 2.0 User-Agent flow. In this flow, the user credentials are handled
+     * by Facebook in an embedded WebView, not by the client application. As
+     * such, the dialog makes a network request and renders HTML content rather
+     * than a native UI. The access token is retrieved from a redirect to a
+     * special URL that the WebView handles.
+     *
+     * Note that User credentials could be handled natively using the OAuth 2.0
+     * Username and Password Flow, but this is not supported by this SDK.
+     *
+     * See http://developers.facebook.com/docs/authentication/ and
+     * http://wiki.oauth.net/OAuth-2 for more details.
+     *
+     * Note that this method is asynchronous and the callback will be invoked in
+     * the original calling thread (not in a background thread).
+     *
+     * Also note that requests may be made to the API without calling authorize
+     * first, in which case only public information is returned.
+     *
+     * IMPORTANT: Note that single sign-on authentication will not function
+     * correctly if you do not include a call to the authorizeCallback() method
+     * in your onActivityResult() function! Please see below for more
+     * information. single sign-on may be disabled by passing FORCE_DIALOG_AUTH
+     * as the activityCode parameter in your call to authorize().
+     *
+     * @param activity
+     *            The Android activity in which we want to display the
+     *            authorization dialog.
+     * @param permissions
+     *            A list of permissions required for this application: e.g.
+     *            "read_stream", "publish_stream", "offline_access", etc. see
+     *            http://developers.facebook.com/docs/authentication/permissions
+     *            This parameter should not be null -- if you do not require any
+     *            permissions, then pass in an empty String array.
+     * @param activityCode
+     *            Single sign-on requires an activity result to be called back
+     *            to the client application -- if you are waiting on other
+     *            activities to return data, pass a custom activity code here to
+     *            avoid collisions. If you would like to force the use of legacy
+     *            dialog-based authorization, pass FORCE_DIALOG_AUTH for this
+     *            parameter. Otherwise just omit this parameter and Facebook
+     *            will use a suitable default. See
+     *            http://developer.android.com/reference/android/
+     *            app/Activity.html for more information.
+     * @param behavior
+     *            The {@link SessionLoginBehavior SessionLoginBehavior} that
+     *            specifies what behaviors should be attempted during
+     *            authorization.
+     * @param listener
+     *            Callback interface for notifying the calling application when
+     *            the authentication dialog has completed, failed, or been
+     *            canceled.
+     */
     private void authorize(Activity activity, String[] permissions, int activityCode,
                           SessionLoginBehavior behavior, final DialogListener listener) {
         checkUserSession("authorize");
@@ -328,9 +328,9 @@ public class Facebook {
 
     // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
     /**
-* Custom version of authorize() for TITANIUM, so that the TiActivitySupport
-* can be used to call startActivityForResult and we can hook into the result.
-*/
+     * Custom version of authorize() for TITANIUM, so that the TiActivitySupport
+     * can be used to call startActivityForResult and we can hook into the result.
+     */
     public void authorize(Activity activity, TiActivitySupport activitySupport, String[] permissions,
         int activityCode, final DialogListener listener, TiActivityResultHandler resultHandler) {
        SessionLoginBehavior behavior = (activityCode >= 0) ? SessionLoginBehavior.SSO_WITH_FALLBACK
@@ -394,21 +394,25 @@ public class Facebook {
                         extras.getString(Session.WEB_VIEW_FAILING_URL_KEY));
                 listener.onError(error);
             } else {
-                FacebookError error = new FacebookError(exception.getMessage());
-                listener.onFacebookError(error);
+                if (exception.getMessage() != null) {
+                    FacebookError error = new FacebookError(exception.getMessage());
+                    listener.onFacebookError(error);
+                } else {
+                    listener.onCancel();
+                }
             }
         }
     }
 
     /**
-* Helper to validate a service intent by resolving and checking the
-* provider's package signature.
-*
-* @param context
-* @param intent
-* @return true if the service intent resolution happens successfully and
-* the signatures match.
-*/
+     * Helper to validate a service intent by resolving and checking the
+     * provider's package signature.
+     *
+     * @param context
+     * @param intent
+     * @return true if the service intent resolution happens successfully and
+     *         the signatures match.
+     */
     private boolean validateServiceIntent(Context context, Intent intent) {
         ResolveInfo resolveInfo = context.getPackageManager().resolveService(intent, 0);
         if (resolveInfo == null) {
@@ -419,13 +423,13 @@ public class Facebook {
     }
 
     /**
-* Query the signature for the application that would be invoked by the
-* given intent and verify that it matches the FB application's signature.
-*
-* @param context
-* @param packageName
-* @return true if the app's signature matches the expected signature.
-*/
+     * Query the signature for the application that would be invoked by the
+     * given intent and verify that it matches the FB application's signature.
+     *
+     * @param context
+     * @param packageName
+     * @return true if the app's signature matches the expected signature.
+     */
     private boolean validateAppSignatureForPackage(Context context, String packageName) {
 
         PackageInfo packageInfo;
@@ -444,21 +448,21 @@ public class Facebook {
     }
 
     /**
-* IMPORTANT: If you are using the deprecated authorize() method,
-* this method must be invoked at the top of the calling
-* activity's onActivityResult() function or Facebook authentication will
-* not function properly!
-* <p/>
-* If your calling activity does not currently implement onActivityResult(),
-* you must implement it and include a call to this method if you intend to
-* use the authorize() method in this SDK.
-* <p/>
-* For more information, see
-* http://developer.android.com/reference/android/app/
-* Activity.html#onActivityResult(int, int, android.content.Intent)
-* <p/>
-* This method is deprecated. See {@link Facebook} and {@link Session} for more info.
-*/
+     * IMPORTANT: If you are using the deprecated authorize() method,
+     * this method must be invoked at the top of the calling
+     * activity's onActivityResult() function or Facebook authentication will
+     * not function properly!
+     * <p/>
+     * If your calling activity does not currently implement onActivityResult(),
+     * you must implement it and include a call to this method if you intend to
+     * use the authorize() method in this SDK.
+     * <p/>
+     * For more information, see
+     * http://developer.android.com/reference/android/app/
+     * Activity.html#onActivityResult(int, int, android.content.Intent)
+     * <p/>
+     * This method is deprecated.  See {@link Facebook} and {@link Session} for more info.
+     */
     @Deprecated
     public void authorizeCallback(int requestCode, int resultCode, Intent data) {
         checkUserSession("authorizeCallback");
@@ -473,26 +477,26 @@ public class Facebook {
     }
 
     /**
-* Refresh OAuth access token method. Binds to Facebook for Android
-* stand-alone application application to refresh the access token. This
-* method tries to connect to the Facebook App which will handle the
-* authentication flow, and return a new OAuth access token. This method
-* will automatically replace the old token with a new one. Note that this
-* method is asynchronous and the callback will be invoked in the original
-* calling thread (not in a background thread).
-* <p/>
-* This method is deprecated. See {@link Facebook} and {@link Session} for more info.
-*
-* @param context
-* The Android Context that will be used to bind to the Facebook
-* RefreshToken Service
-* @param serviceListener
-* Callback interface for notifying the calling application when
-* the refresh request has completed or failed (can be null). In
-* case of a success a new token can be found inside the result
-* Bundle under Facebook.ACCESS_TOKEN key.
-* @return true if the binding to the RefreshToken Service was created
-*/
+     * Refresh OAuth access token method. Binds to Facebook for Android
+     * stand-alone application application to refresh the access token. This
+     * method tries to connect to the Facebook App which will handle the
+     * authentication flow, and return a new OAuth access token. This method
+     * will automatically replace the old token with a new one. Note that this
+     * method is asynchronous and the callback will be invoked in the original
+     * calling thread (not in a background thread).
+     * <p/>
+     * This method is deprecated.  See {@link Facebook} and {@link Session} for more info.
+     *
+     * @param context
+     *            The Android Context that will be used to bind to the Facebook
+     *            RefreshToken Service
+     * @param serviceListener
+     *            Callback interface for notifying the calling application when
+     *            the refresh request has completed or failed (can be null). In
+     *            case of a success a new token can be found inside the result
+     *            Bundle under Facebook.ACCESS_TOKEN key.
+     * @return true if the binding to the RefreshToken Service was created
+     */
     @Deprecated
     public boolean extendAccessToken(Context context, ServiceListener serviceListener) {
         checkUserSession("extendAccessToken");
@@ -512,13 +516,13 @@ public class Facebook {
     }
 
     /**
-* Calls extendAccessToken if shouldExtendAccessToken returns true.
-* <p/>
-* This method is deprecated. See {@link Facebook} and {@link Session} for more info.
-*
-* @return the same value as extendAccessToken if the the token requires
-* refreshing, true otherwise
-*/
+     * Calls extendAccessToken if shouldExtendAccessToken returns true.
+     * <p/>
+     * This method is deprecated.  See {@link Facebook} and {@link Session} for more info.
+     *
+     * @return the same value as extendAccessToken if the the token requires
+     *         refreshing, true otherwise
+     */
     @Deprecated
     public boolean extendAccessTokenIfNeeded(Context context, ServiceListener serviceListener) {
         checkUserSession("extendAccessTokenIfNeeded");
@@ -529,13 +533,13 @@ public class Facebook {
     }
 
     /**
-* Check if the access token requires refreshing.
-* <p/>
-* This method is deprecated. See {@link Facebook} and {@link Session} for more info.
-*
-* @return true if the last time a new token was obtained was over 24 hours
-* ago.
-*/
+     * Check if the access token requires refreshing.
+     * <p/>
+     * This method is deprecated.  See {@link Facebook} and {@link Session} for more info.
+     *
+     * @return true if the last time a new token was obtained was over 24 hours
+     *         ago.
+     */
     @Deprecated
     public boolean shouldExtendAccessToken() {
         checkUserSession("shouldExtendAccessToken");
@@ -544,9 +548,9 @@ public class Facebook {
     }
 
     /**
-* Handles connection to the token refresh service (this service is a part
-* of Facebook App).
-*/
+     * Handles connection to the token refresh service (this service is a part
+     * of Facebook App).
+     */
     private class TokenRefreshServiceConnection implements ServiceConnection {
 
         final Messenger messageReceiver = new Messenger(
@@ -659,30 +663,30 @@ public class Facebook {
     }
 
     /**
-* Invalidate the current user session by removing the access token in
-* memory, clearing the browser cookie, and calling auth.expireSession
-* through the API.
-* <p/>
-* Note that this method blocks waiting for a network response, so do not
-* call it in a UI thread.
-* <p/>
-* This method is deprecated. See {@link Facebook} and {@link Session} for more info.
-*
-* @param context
-* The Android context in which the logout should be called: it
-* should be the same context in which the login occurred in
-* order to clear any stored cookies
-* @throws IOException
-* @throws MalformedURLException
-* @return JSON string representation of the auth.expireSession response
-* ("true" if successful)
-*/
+     * Invalidate the current user session by removing the access token in
+     * memory, clearing the browser cookie, and calling auth.expireSession
+     * through the API.
+     * <p/>
+     * Note that this method blocks waiting for a network response, so do not
+     * call it in a UI thread.
+     * <p/>
+     * This method is deprecated.  See {@link Facebook} and {@link Session} for more info.
+     *
+     * @param context
+     *            The Android context in which the logout should be called: it
+     *            should be the same context in which the login occurred in
+     *            order to clear any stored cookies
+     * @throws IOException
+     * @throws MalformedURLException
+     * @return JSON string representation of the auth.expireSession response
+     *         ("true" if successful)
+     */
     @Deprecated
     public String logout(Context context) throws MalformedURLException, IOException {
         return logoutImpl(context);
     }
 
-    String logoutImpl(Context context) throws MalformedURLException, IOException {
+    String logoutImpl(Context context) throws MalformedURLException, IOException  {
         checkUserSession("logout");
         Bundle b = new Bundle();
         b.putString("method", "auth.expireSession");
@@ -709,34 +713,34 @@ public class Facebook {
     }
 
     /**
-* Make a request to Facebook's old (pre-graph) API with the given
-* parameters. One of the parameter keys must be "method" and its value
-* should be a valid REST server API method.
-* <p/>
-* See http://developers.facebook.com/docs/reference/rest/
-* <p/>
-* Note that this method blocks waiting for a network response, so do not
-* call it in a UI thread.
-* <p/>
-* Example: <code>
-* Bundle parameters = new Bundle();
-* parameters.putString("method", "auth.expireSession");
-* String response = request(parameters);
-* </code>
-* <p/>
-* This method is deprecated. See {@link Facebook} and {@link Request} for more info.
-*
-* @param parameters
-* Key-value pairs of parameters to the request. Refer to the
-* documentation: one of the parameters must be "method".
-* @throws IOException
-* if a network error occurs
-* @throws MalformedURLException
-* if accessing an invalid endpoint
-* @throws IllegalArgumentException
-* if one of the parameters is not "method"
-* @return JSON string representation of the response
-*/
+     * Make a request to Facebook's old (pre-graph) API with the given
+     * parameters. One of the parameter keys must be "method" and its value
+     * should be a valid REST server API method.
+     * <p/>
+     * See http://developers.facebook.com/docs/reference/rest/
+     * <p/>
+     * Note that this method blocks waiting for a network response, so do not
+     * call it in a UI thread.
+     * <p/>
+     * Example: <code>
+     *  Bundle parameters = new Bundle();
+     *  parameters.putString("method", "auth.expireSession");
+     *  String response = request(parameters);
+     * </code>
+     * <p/>
+     * This method is deprecated.  See {@link Facebook} and {@link Request} for more info.
+     *
+     * @param parameters
+     *            Key-value pairs of parameters to the request. Refer to the
+     *            documentation: one of the parameters must be "method".
+     * @throws IOException
+     *             if a network error occurs
+     * @throws MalformedURLException
+     *             if accessing an invalid endpoint
+     * @throws IllegalArgumentException
+     *             if one of the parameters is not "method"
+     * @return JSON string representation of the response
+     */
     @Deprecated
     public String request(Bundle parameters) throws MalformedURLException, IOException {
         if (!parameters.containsKey("method")) {
@@ -748,84 +752,84 @@ public class Facebook {
     }
 
     /**
-* Make a request to the Facebook Graph API without any parameters.
-* <p/>
-* See http://developers.facebook.com/docs/api
-* <p/>
-* Note that this method blocks waiting for a network response, so do not
-* call it in a UI thread.
-* <p/>
-* This method is deprecated. See {@link Facebook} and {@link Request} for more info.
-*
-* @param graphPath
-* Path to resource in the Facebook graph, e.g., to fetch data
-* about the currently logged authenticated user, provide "me",
-* which will fetch http://graph.facebook.com/me
-* @throws IOException
-* @throws MalformedURLException
-* @return JSON string representation of the response
-*/
+     * Make a request to the Facebook Graph API without any parameters.
+     * <p/>
+     * See http://developers.facebook.com/docs/api
+     * <p/>
+     * Note that this method blocks waiting for a network response, so do not
+     * call it in a UI thread.
+     * <p/>
+     * This method is deprecated.  See {@link Facebook} and {@link Request} for more info.
+     *
+     * @param graphPath
+     *            Path to resource in the Facebook graph, e.g., to fetch data
+     *            about the currently logged authenticated user, provide "me",
+     *            which will fetch http://graph.facebook.com/me
+     * @throws IOException
+     * @throws MalformedURLException
+     * @return JSON string representation of the response
+     */
     @Deprecated
     public String request(String graphPath) throws MalformedURLException, IOException {
         return requestImpl(graphPath, new Bundle(), "GET");
     }
 
     /**
-* Make a request to the Facebook Graph API with the given string parameters
-* using an HTTP GET (default method).
-* <p/>
-* See http://developers.facebook.com/docs/api
-* <p/>
-* Note that this method blocks waiting for a network response, so do not
-* call it in a UI thread.
-* <p/>
-* This method is deprecated. See {@link Facebook} and {@link Request} for more info.
-*
-* @param graphPath
-* Path to resource in the Facebook graph, e.g., to fetch data
-* about the currently logged authenticated user, provide "me",
-* which will fetch http://graph.facebook.com/me
-* @param parameters
-* key-value string parameters, e.g. the path "search" with
-* parameters "q" : "facebook" would produce a query for the
-* following graph resource:
-* https://graph.facebook.com/search?q=facebook
-* @throws IOException
-* @throws MalformedURLException
-* @return JSON string representation of the response
-*/
+     * Make a request to the Facebook Graph API with the given string parameters
+     * using an HTTP GET (default method).
+     * <p/>
+     * See http://developers.facebook.com/docs/api
+     * <p/>
+     * Note that this method blocks waiting for a network response, so do not
+     * call it in a UI thread.
+     * <p/>
+     * This method is deprecated.  See {@link Facebook} and {@link Request} for more info.
+     *
+     * @param graphPath
+     *            Path to resource in the Facebook graph, e.g., to fetch data
+     *            about the currently logged authenticated user, provide "me",
+     *            which will fetch http://graph.facebook.com/me
+     * @param parameters
+     *            key-value string parameters, e.g. the path "search" with
+     *            parameters "q" : "facebook" would produce a query for the
+     *            following graph resource:
+     *            https://graph.facebook.com/search?q=facebook
+     * @throws IOException
+     * @throws MalformedURLException
+     * @return JSON string representation of the response
+     */
     @Deprecated
     public String request(String graphPath, Bundle parameters) throws MalformedURLException, IOException {
         return requestImpl(graphPath, parameters, "GET");
     }
 
     /**
-* Synchronously make a request to the Facebook Graph API with the given
-* HTTP method and string parameters. Note that binary data parameters (e.g.
-* pictures) are not yet supported by this helper function.
-* <p/>
-* See http://developers.facebook.com/docs/api
-* <p/>
-* Note that this method blocks waiting for a network response, so do not
-* call it in a UI thread.
-* <p/>
-* This method is deprecated. See {@link Facebook} and {@link Request} for more info.
-*
-* @param graphPath
-* Path to resource in the Facebook graph, e.g., to fetch data
-* about the currently logged authenticated user, provide "me",
-* which will fetch http://graph.facebook.com/me
-* @param params
-* Key-value string parameters, e.g. the path "search" with
-* parameters {"q" : "facebook"} would produce a query for the
-* following graph resource:
-* https://graph.facebook.com/search?q=facebook
-* @param httpMethod
-* http verb, e.g. "GET", "POST", "DELETE"
-* @throws IOException
-* @throws MalformedURLException
-* @return JSON string representation of the response
-*/
+     * Synchronously make a request to the Facebook Graph API with the given
+     * HTTP method and string parameters. Note that binary data parameters (e.g.
+     * pictures) are not yet supported by this helper function.
+     * <p/>
+     * See http://developers.facebook.com/docs/api
+     * <p/>
+     * Note that this method blocks waiting for a network response, so do not
+     * call it in a UI thread.
+     * <p/>
+     * This method is deprecated.  See {@link Facebook} and {@link Request} for more info.
+     *
+     * @param graphPath
+     *            Path to resource in the Facebook graph, e.g., to fetch data
+     *            about the currently logged authenticated user, provide "me",
+     *            which will fetch http://graph.facebook.com/me
+     * @param params
+     *            Key-value string parameters, e.g. the path "search" with
+     *            parameters {"q" : "facebook"} would produce a query for the
+     *            following graph resource:
+     *            https://graph.facebook.com/search?q=facebook
+     * @param httpMethod
+     *            http verb, e.g. "GET", "POST", "DELETE"
+     * @throws IOException
+     * @throws MalformedURLException
+     * @return JSON string representation of the response
+     */
     @Deprecated
     public String request(String graphPath, Bundle params, String httpMethod) throws FileNotFoundException,
             MalformedURLException, IOException {
@@ -845,46 +849,46 @@ public class Facebook {
     }
 
     /**
-* Generate a UI dialog for the request action in the given Android context.
-* <p/>
-* Note that this method is asynchronous and the callback will be invoked in
-* the original calling thread (not in a background thread).
-*
-* This method is deprecated. See {@link com.facebook.widget.WebDialog}.
-*
-* @param context
-* The Android context in which we will generate this dialog.
-* @param action
-* String representation of the desired method: e.g. "login",
-* "stream.publish", ...
-* @param listener
-* Callback interface to notify the application when the dialog
-* has completed.
-*/
+     * Generate a UI dialog for the request action in the given Android context.
+     * <p/>
+     * Note that this method is asynchronous and the callback will be invoked in
+     * the original calling thread (not in a background thread).
+     *
+     * This method is deprecated. See {@link com.facebook.widget.WebDialog}.
+     *
+     * @param context
+     *            The Android context in which we will generate this dialog.
+     * @param action
+     *            String representation of the desired method: e.g. "login",
+     *            "stream.publish", ...
+     * @param listener
+     *            Callback interface to notify the application when the dialog
+     *            has completed.
+     */
     @Deprecated
     public void dialog(Context context, String action, DialogListener listener) {
         dialog(context, action, new Bundle(), listener);
     }
 
     /**
-* Generate a UI dialog for the request action in the given Android context
-* with the provided parameters.
-* <p/>
-* Note that this method is asynchronous and the callback will be invoked in
-* the original calling thread (not in a background thread).
-*
-* This method is deprecated. See {@link com.facebook.widget.WebDialog}.
-*
-* @param context
-* The Android context in which we will generate this dialog.
-* @param action
-* String representation of the desired method: e.g. "feed" ...
-* @param parameters
-* String key-value pairs to be passed as URL parameters.
-* @param listener
-* Callback interface to notify the application when the dialog
-* has completed.
-*/
+     * Generate a UI dialog for the request action in the given Android context
+     * with the provided parameters.
+     * <p/>
+     * Note that this method is asynchronous and the callback will be invoked in
+     * the original calling thread (not in a background thread).
+     *
+     * This method is deprecated. See {@link com.facebook.widget.WebDialog}.
+     *
+     * @param context
+     *            The Android context in which we will generate this dialog.
+     * @param action
+     *            String representation of the desired method: e.g. "feed" ...
+     * @param parameters
+     *            String key-value pairs to be passed as URL parameters.
+     * @param listener
+     *            Callback interface to notify the application when the dialog
+     *            has completed.
+     */
     @Deprecated
     public void dialog(Context context, String action, Bundle parameters, final DialogListener listener) {
         parameters.putString("display", "touch");
@@ -909,10 +913,10 @@ public class Facebook {
     }
 
     /**
-* Returns whether the current access token is valid
-*
-* @return boolean - whether this object has an non-expired session token
-*/
+     * Returns whether the current access token is valid
+     *
+     * @return boolean - whether this object has an non-expired session token
+     */
     @Deprecated
     public boolean isSessionValid() {
         return (getAccessToken() != null)
@@ -920,14 +924,14 @@ public class Facebook {
     }
 
     /**
-* Allows the user to set a Session for the Facebook class to use.
-* If a Session is set here, then one should not use the authorize, logout,
-* or extendAccessToken methods which alter the Session object since that may
-* result in undefined behavior. Using those methods after setting the
-* session here will result in exceptions being thrown.
-*
-* @param session the Session object to use, cannot be null
-*/
+     * Allows the user to set a Session for the Facebook class to use.
+     * If a Session is set here, then one should not use the authorize, logout,
+     * or extendAccessToken methods which alter the Session object since that may
+     * result in undefined behavior. Using those methods after setting the
+     * session here will result in exceptions being thrown.
+     *
+     * @param session the Session object to use, cannot be null
+     */
     @Deprecated
     public void setSession(Session session) {
         if (session == null) {
@@ -946,10 +950,10 @@ public class Facebook {
     }
 
     /**
-* Get the underlying Session object to use with 3.0 api.
-*
-* @return Session - underlying session
-*/
+     * Get the underlying Session object to use with 3.0 api.
+     *
+     * @return Session - underlying session
+     */
     @Deprecated
     public final Session getSession() {
         while (true) {
@@ -1019,11 +1023,11 @@ public class Facebook {
     }
 
     /**
-* Retrieve the OAuth 2.0 access token for API access: treat with care.
-* Returns null if no session exists.
-*
-* @return String - access token
-*/
+     * Retrieve the OAuth 2.0 access token for API access: treat with care.
+     * Returns null if no session exists.
+     *
+     * @return String - access token
+     */
     @Deprecated
     public String getAccessToken() {
         Session s = getSession();
@@ -1035,11 +1039,11 @@ public class Facebook {
     }
 
     /**
-* Retrieve the current session's expiration time (in milliseconds since
-* Unix epoch), or 0 if the session doesn't expire or doesn't exist.
-*
-* @return long - session expiration time
-*/
+     * Retrieve the current session's expiration time (in milliseconds since
+     * Unix epoch), or 0 if the session doesn't expire or doesn't exist.
+     *
+     * @return long - session expiration time
+     */
     @Deprecated
     public long getAccessExpires() {
         Session s = getSession();
@@ -1051,27 +1055,27 @@ public class Facebook {
     }
 
     /**
-* Retrieve the last time the token was updated (in milliseconds since
-* the Unix epoch), or 0 if the token has not been set.
-*
-* @return long - timestamp of the last token update.
-*/
+     * Retrieve the last time the token was updated (in milliseconds since
+     * the Unix epoch), or 0 if the token has not been set.
+     *
+     * @return long - timestamp of the last token update.
+     */
     @Deprecated
     public long getLastAccessUpdate() {
         return lastAccessUpdateMillisecondsAfterEpoch;
     }
 
     /**
-* Restore the token, expiration time, and last update time from cached values.
-* These should be values obtained from getAccessToken(), getAccessExpires, and
-* getLastAccessUpdate() respectively.
-* <p/>
-* This method is deprecated. See {@link Facebook} and {@link Session} for more info.
-*
-* @param accessToken - access token
-* @param accessExpires - access token expiration time
-* @param lastAccessUpdate - timestamp of the last token update
-*/
+     * Restore the token, expiration time, and last update time from cached values.
+     * These should be values obtained from getAccessToken(), getAccessExpires, and
+     * getLastAccessUpdate() respectively.
+     * <p/>
+     * This method is deprecated.  See {@link Facebook} and {@link Session} for more info.
+     *
+     * @param accessToken - access token
+     * @param accessExpires - access token expiration time
+     * @param lastAccessUpdate - timestamp of the last token update
+     */
     @Deprecated
     public void setTokenFromCache(String accessToken, long accessExpires, long lastAccessUpdate) {
         checkUserSession("setTokenFromCache");
@@ -1083,13 +1087,13 @@ public class Facebook {
     }
 
     /**
-* Set the OAuth 2.0 access token for API access.
-* <p/>
-* This method is deprecated. See {@link Facebook} and {@link Session} for more info.
-*
-* @param token
-* - access token
-*/
+     * Set the OAuth 2.0 access token for API access.
+     * <p/>
+     * This method is deprecated.  See {@link Facebook} and {@link Session} for more info.
+     *
+     * @param token
+     *            - access token
+     */
     @Deprecated
     public void setAccessToken(String token) {
         checkUserSession("setAccessToken");
@@ -1101,14 +1105,14 @@ public class Facebook {
     }
 
     /**
-* Set the current session's expiration time (in milliseconds since Unix
-* epoch), or 0 if the session doesn't expire.
-* <p/>
-* This method is deprecated. See {@link Facebook} and {@link Session} for more info.
-*
-* @param timestampInMsec
-* - timestamp in milliseconds
-*/
+     * Set the current session's expiration time (in milliseconds since Unix
+     * epoch), or 0 if the session doesn't expire.
+     * <p/>
+     * This method is deprecated.  See {@link Facebook} and {@link Session} for more info.
+     *
+     * @param timestampInMsec
+     *            - timestamp in milliseconds
+     */
     @Deprecated
     public void setAccessExpires(long timestampInMsec) {
         checkUserSession("setAccessExpires");
@@ -1120,14 +1124,14 @@ public class Facebook {
     }
 
     /**
-* Set the current session's duration (in seconds since Unix epoch), or "0"
-* if session doesn't expire.
-* <p/>
-* This method is deprecated. See {@link Facebook} and {@link Session} for more info.
-*
-* @param expiresInSecsFromNow
-* - duration in seconds (or 0 if the session doesn't expire)
-*/
+     * Set the current session's duration (in seconds since Unix epoch), or "0"
+     * if session doesn't expire.
+     * <p/>
+     * This method is deprecated.  See {@link Facebook} and {@link Session} for more info.
+     *
+     * @param expiresInSecsFromNow
+     *            - duration in seconds (or 0 if the session doesn't expire)
+     */
     @Deprecated
     public void setAccessExpiresIn(String expiresInSecsFromNow) {
         checkUserSession("setAccessExpiresIn");
@@ -1139,20 +1143,20 @@ public class Facebook {
     }
 
     /**
-* This method is deprecated. See {@link Facebook} and {@link Session} for more info.
-*
-* @return the String representing application ID
-*/
+     * This method is deprecated.  See {@link Facebook} and {@link Session} for more info.
+     *
+     * @return the String representing application ID
+     */
     @Deprecated
     public String getAppId() {
         return mAppId;
     }
 
     /**
-* This method is deprecated. See {@link Facebook} and {@link Session} for more info.
-*
-* @param appId the String representing the application ID
-*/
+     * This method is deprecated.  See {@link Facebook} and {@link Session} for more info.
+     *
+     * @param appId the String representing the application ID
+     */
     @Deprecated
     public void setAppId(String appId) {
         checkUserSession("setAppId");
@@ -1224,56 +1228,56 @@ public class Facebook {
     }
 
     /**
-* Get Attribution ID for app install conversion tracking.
-* <p/>
-* This method is deprecated. See {@link Facebook} and {@link Settings} for more info.
-*
-* @param contentResolver
-* @return Attribution ID that will be used for conversion tracking. It will be null only if
-* the user has not installed or logged in to the Facebook app.
-*/
+     * Get Attribution ID for app install conversion tracking.
+     * <p/>
+     * This method is deprecated.  See {@link Facebook} and {@link Settings} for more info.
+     *
+     * @param contentResolver
+     * @return Attribution ID that will be used for conversion tracking. It will be null only if
+     *         the user has not installed or logged in to the Facebook app.
+     */
     @Deprecated
     public static String getAttributionId(ContentResolver contentResolver) {
         return Settings.getAttributionId(contentResolver);
     }
 
     /**
-* Get the auto install publish setting. If true, an install event will be published during authorize(), unless
-* it has occurred previously or the app does not have install attribution enabled on the application's developer
-* config page.
-* <p/>
-* This method is deprecated. See {@link Facebook} and {@link Settings} for more info.
-*
-* @return a Boolean indicating whether installation of the app should be auto-published.
-*/
+     * Get the auto install publish setting.  If true, an install event will be published during authorize(), unless
+     * it has occurred previously or the app does not have install attribution enabled on the application's developer
+     * config page.
+     * <p/>
+     * This method is deprecated.  See {@link Facebook} and {@link Settings} for more info.
+     *
+     * @return a Boolean indicating whether installation of the app should be auto-published.
+     */
     @Deprecated
     public boolean getShouldAutoPublishInstall() {
         return Settings.getShouldAutoPublishInstall();
     }
 
     /**
-* Sets whether auto publishing of installs will occur.
-* <p/>
-* This method is deprecated. See {@link Facebook} and {@link Settings} for more info.
-*
-* @param value a Boolean indicating whether installation of the app should be auto-published.
-*/
+     * Sets whether auto publishing of installs will occur.
+     * <p/>
+     * This method is deprecated.  See {@link Facebook} and {@link Settings} for more info.
+     *
+     * @param value a Boolean indicating whether installation of the app should be auto-published.
+     */
     @Deprecated
     public void setShouldAutoPublishInstall(boolean value) {
         Settings.setShouldAutoPublishInstall(value);
     }
 
     /**
-* Manually publish install attribution to the Facebook graph. Internally handles tracking repeat calls to prevent
-* multiple installs being published to the graph.
-* <p/>
-* This method is deprecated. See {@link Facebook} and {@link Settings} for more info.
-*
-* @param context the current Android context
-* @return Always false. Earlier versions of the API returned true if it was no longer necessary to call.
-* Apps should ignore this value, but for compatibility we will return false to ensure repeat calls (and the
-* underlying code will prevent duplicate network traffic).
-*/
+     * Manually publish install attribution to the Facebook graph.  Internally handles tracking repeat calls to prevent
+     * multiple installs being published to the graph.
+     * <p/>
+     * This method is deprecated.  See {@link Facebook} and {@link Settings} for more info.
+     *
+     * @param context the current Android context
+     * @return Always false.  Earlier versions of the API returned true if it was no longer necessary to call.
+     * Apps should ignore this value, but for compatibility we will return false to ensure repeat calls (and the
+     * underlying code will prevent duplicate network traffic).
+     */
     @Deprecated
     public boolean publishInstall(final Context context) {
         Settings.publishInstallAsync(context, mAppId);
@@ -1281,91 +1285,91 @@ public class Facebook {
     }
 
     /**
-* Callback interface for dialog requests.
-* <p/>
-* THIS CLASS SHOULD BE CONSIDERED DEPRECATED.
-* <p/>
-* All public members of this class are intentionally deprecated.
-* New code should instead use
-* {@link com.facebook.widget.WebDialog}
-* <p/>
-* Adding @Deprecated to this class causes warnings in other deprecated classes
-* that reference this one. That is the only reason this entire class is not
-* deprecated.
-*
-* @devDocDeprecated
-*/
+     * Callback interface for dialog requests.
+     * <p/>
+     * THIS CLASS SHOULD BE CONSIDERED DEPRECATED.
+     * <p/>
+     * All public members of this class are intentionally deprecated.
+     * New code should instead use
+     * {@link com.facebook.widget.WebDialog}
+     * <p/>
+     * Adding @Deprecated to this class causes warnings in other deprecated classes
+     * that reference this one.  That is the only reason this entire class is not
+     * deprecated.
+     *
+     * @devDocDeprecated
+     */
     public static interface DialogListener {
 
         /**
-* Called when a dialog completes.
-*
-* Executed by the thread that initiated the dialog.
-*
-* @param values
-* Key-value string pairs extracted from the response.
-*/
+         * Called when a dialog completes.
+         *
+         * Executed by the thread that initiated the dialog.
+         *
+         * @param values
+         *            Key-value string pairs extracted from the response.
+         */
         public void onComplete(Bundle values);
 
         /**
-* Called when a Facebook responds to a dialog with an error.
-*
-* Executed by the thread that initiated the dialog.
-*
-*/
+         * Called when a Facebook responds to a dialog with an error.
+         *
+         * Executed by the thread that initiated the dialog.
+         *
+         */
         public void onFacebookError(FacebookError e);
 
         /**
-* Called when a dialog has an error.
-*
-* Executed by the thread that initiated the dialog.
-*
-*/
+         * Called when a dialog has an error.
+         *
+         * Executed by the thread that initiated the dialog.
+         *
+         */
         public void onError(DialogError e);
 
         /**
-* Called when a dialog is canceled by the user.
-*
-* Executed by the thread that initiated the dialog.
-*
-*/
+         * Called when a dialog is canceled by the user.
+         *
+         * Executed by the thread that initiated the dialog.
+         *
+         */
         public void onCancel();
 
     }
 
     /**
-* Callback interface for service requests.
-* <p/>
-* THIS CLASS SHOULD BE CONSIDERED DEPRECATED.
-* <p/>
-* All public members of this class are intentionally deprecated.
-* New code should instead use
-* {@link Session} to manage session state.
-* <p/>
-* Adding @Deprecated to this class causes warnings in other deprecated classes
-* that reference this one. That is the only reason this entire class is not
-* deprecated.
-*
-* @devDocDeprecated
-*/
+     * Callback interface for service requests.
+     * <p/>
+     * THIS CLASS SHOULD BE CONSIDERED DEPRECATED.
+     * <p/>
+     * All public members of this class are intentionally deprecated.
+     * New code should instead use
+     * {@link Session} to manage session state.
+     * <p/>
+     * Adding @Deprecated to this class causes warnings in other deprecated classes
+     * that reference this one.  That is the only reason this entire class is not
+     * deprecated.
+     *
+     * @devDocDeprecated
+     */
     public static interface ServiceListener {
 
         /**
-* Called when a service request completes.
-*
-* @param values
-* Key-value string pairs extracted from the response.
-*/
+         * Called when a service request completes.
+         *
+         * @param values
+         *            Key-value string pairs extracted from the response.
+         */
         public void onComplete(Bundle values);
 
         /**
-* Called when a Facebook server responds to the request with an error.
-*/
+         * Called when a Facebook server responds to the request with an error.
+         */
         public void onFacebookError(FacebookError e);
 
         /**
-* Called when a Facebook Service responds to the request with an error.
-*/
+         * Called when a Facebook Service responds to the request with an error.
+         */
         public void onError(Error e);
 
     }
