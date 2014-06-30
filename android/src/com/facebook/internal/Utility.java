@@ -205,6 +205,23 @@ public final class Utility {
     public static int resId_userSettingsFragmentProfilePictureHeight = -1;
     public static int resId_userSettingsFragmentProfilePictureWidth = -1;
 
+    //Variables from toolTipPopup
+    public static int resId_toolTipBubbleViewTextBody = -1;
+    public static int resId_toolTipBlueBackground = -1;
+    public static int resId_toolTipBlueBottomNub = -1;
+    public static int resId_toolTipBlueTopNub = -1;
+    public static int resId_toolTipBlueXout = -1;
+    public static int resId_toolTipBlackBackground = -1;
+    public static int resId_toolTipBlackBottomNub = -1;
+    public static int resId_toolTipBlackTopNub = -1;
+    public static int resId_toolTipBlackXout = -1;
+    public static int resId_toolTipBubble = -1;
+    public static int resId_toolTipBubbleViewTop = -1;
+    public static int resId_toolTipBubbleViewBottom = -1;
+    public static int resId_toolTipBodyFrame = -1;
+    public static int resId_toolTipButtonXout = -1;
+    public static int resId_toolTipDefault = -1;
+
     // Returns true iff all items in subset are in superset, treating null and
     // empty collections as
     // the same.
@@ -641,7 +658,22 @@ public final class Utility {
        resId_userSettingsFragmentProfileName = resources.getIdentifier("com_facebook_usersettingsfragment_profile_name", "id", packageName);
        resId_userSettingsFragmentProfilePictureHeight = resources.getIdentifier("com_facebook_usersettingsfragment_profile_picture_height", "dimen", packageName);
        resId_userSettingsFragmentProfilePictureWidth = resources.getIdentifier("com_facebook_usersettingsfragment_profile_picture_width", "dimen", packageName);
-
+       //Variables from tooltipPopup
+       resId_toolTipBubbleViewTextBody = resources.getIdentifier("com_facebook_tooltip_bubble_view_text_body", "id", packageName);
+       resId_toolTipBlueBackground     = resources.getIdentifier("com_facebook_tooltip_blue_background", "drawable", packageName);
+       resId_toolTipBlueBottomNub      = resources.getIdentifier("com_facebook_tooltip_blue_bottomnub", "drawable", packageName);
+       resId_toolTipBlueTopNub         = resources.getIdentifier("com_facebook_tooltip_blue_topnub", "drawable", packageName);
+       resId_toolTipBlueXout           = resources.getIdentifier("com_facebook_tooltip_blue_xout", "drawable", packageName);
+       resId_toolTipBlackBackground    = resources.getIdentifier("com_facebook_tooltip_black_background", "drawable", packageName);
+       resId_toolTipBlackBottomNub     = resources.getIdentifier("com_facebook_tooltip_black_bottomnub", "drawable", packageName);
+       resId_toolTipBlackTopNub        = resources.getIdentifier("com_facebook_tooltip_black_topnub", "drawable", packageName);
+       resId_toolTipBlackXout          = resources.getIdentifier("com_facebook_tooltip_black_xout", "drawable", packageName);
+       resId_toolTipBubble             = resources.getIdentifier("com_facebook_tooltip_bubble", "layout", packageName);
+       resId_toolTipBubbleViewTop      = resources.getIdentifier("com_facebook_tooltip_bubble_view_top_pointer", "id", packageName);
+       resId_toolTipBubbleViewBottom   = resources.getIdentifier("com_facebook_tooltip_bubble_view_bottom_pointer", "id", packageName);
+       resId_toolTipBodyFrame          = resources.getIdentifier("com_facebook_body_frame", "id", packageName);
+       resId_toolTipButtonXout         = resources.getIdentifier("com_facebook_button_xout", "id", packageName);
+       resId_toolTipDefault            = resources.getIdentifier("com_facebook_tooltip_default", "id", packageName);
 
    }
     // Return a hash of the android_id combined with the appid. Intended to dedupe requests on the server side

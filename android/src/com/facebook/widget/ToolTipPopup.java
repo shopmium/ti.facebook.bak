@@ -18,7 +18,7 @@ package com.facebook.widget;
 
 import java.lang.ref.WeakReference;
 
-import com.facebook.android.R;
+//import com.facebook.android.R;
 import com.facebook.widget.LoginButton.ToolTipMode;
 
 import android.app.Activity;
@@ -31,6 +31,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.PopupWindow;
 import android.widget.TextView;
+import com.facebook.internal.Utility;
 
 public class ToolTipPopup {
     
@@ -60,13 +61,13 @@ public class ToolTipPopup {
     private PopupWindow mPopupWindow;
     private Style mStyle = Style.BLUE;
     private long mNuxDisplayTime = DEFAULT_POPUP_DISPLAY_TIME;
-    
-    private final ViewTreeObserver.OnScrollChangedListener mScrollListener = 
+
+    private final ViewTreeObserver.OnScrollChangedListener mScrollListener =
             new ViewTreeObserver.OnScrollChangedListener() {
                 @Override
                 public void onScrollChanged() {
-                    if (mAnchorViewRef.get() != null && 
-                            mPopupWindow != null && 
+                    if (mAnchorViewRef.get() != null &&
+                            mPopupWindow != null &&
                             mPopupWindow.isShowing()) {
                         if (mPopupWindow.isAboveAnchor()) {
                             mPopupContent.showBottomArrow();
@@ -76,7 +77,7 @@ public class ToolTipPopup {
                     }
                 }
             };
-    
+            
     /**
      * Create a new ToolTipPopup
      * @param text The text to be displayed in the tool tip
@@ -103,24 +104,24 @@ public class ToolTipPopup {
         if (mAnchorViewRef.get() != null) {
             mPopupContent = new PopupContentView(mContext);
             TextView body = (TextView) mPopupContent.findViewById(
-                    R.id.com_facebook_tooltip_bubble_view_text_body);
+                    Utility.resId_toolTipBubbleViewTextBody);
             body.setText(mText);
             if (mStyle == Style.BLUE) {
                 mPopupContent.bodyFrame.setBackgroundResource(
-                        R.drawable.com_facebook_tooltip_blue_background);
+                        Utility.resId_toolTipBlueBackground);
                 mPopupContent.bottomArrow.setImageResource(
-                        R.drawable.com_facebook_tooltip_blue_bottomnub);
+                        Utility.resId_toolTipBlueBottomNub);
                 mPopupContent.topArrow.setImageResource(
-                        R.drawable.com_facebook_tooltip_blue_topnub);
-                mPopupContent.xOut.setImageResource(R.drawable.com_facebook_tooltip_blue_xout);
+                        Utility.resId_toolTipBlueTopNub);
+                mPopupContent.xOut.setImageResource(Utility.resId_toolTipBlueXout);
             } else {
                 mPopupContent.bodyFrame.setBackgroundResource(
-                        R.drawable.com_facebook_tooltip_black_background);
+                        Utility.resId_toolTipBlackBackground);
                 mPopupContent.bottomArrow.setImageResource(
-                        R.drawable.com_facebook_tooltip_black_bottomnub);
+                        Utility.resId_toolTipBlackBottomNub);
                 mPopupContent.topArrow.setImageResource(
-                        R.drawable.com_facebook_tooltip_black_topnub);
-                mPopupContent.xOut.setImageResource(R.drawable.com_facebook_tooltip_black_xout);
+                        Utility.resId_toolTipBlackTopNub);
+                mPopupContent.xOut.setImageResource(Utility.resId_toolTipBlackXout);
             }
             
             final Window window = ((Activity) mContext).getWindow();
@@ -129,10 +130,10 @@ public class ToolTipPopup {
             final int decorHeight = decorView.getHeight();
             registerObserver();
             mPopupContent.onMeasure(
-                    View.MeasureSpec.makeMeasureSpec(decorWidth, View.MeasureSpec.AT_MOST), 
+                    View.MeasureSpec.makeMeasureSpec(decorWidth, View.MeasureSpec.AT_MOST),
                     View.MeasureSpec.makeMeasureSpec(decorHeight, View.MeasureSpec.AT_MOST));
             mPopupWindow = new PopupWindow(
-                    mPopupContent, 
+                    mPopupContent,
                     mPopupContent.getMeasuredWidth(),
                     mPopupContent.getMeasuredHeight());
             mPopupWindow.showAsDropDown(mAnchorViewRef.get());
@@ -202,7 +203,7 @@ public class ToolTipPopup {
         private ImageView bottomArrow;
         private View bodyFrame;
         private ImageView xOut;
-        
+
         public PopupContentView(Context context) {
             super(context);
             init();
@@ -210,12 +211,12 @@ public class ToolTipPopup {
         
         private void init() {
             LayoutInflater inflater = LayoutInflater.from(getContext());
-            inflater.inflate(R.layout.com_facebook_tooltip_bubble, this);
-            topArrow = (ImageView) findViewById(R.id.com_facebook_tooltip_bubble_view_top_pointer);
+            inflater.inflate(Utility.resId_toolTipBubble, this);
+            topArrow = (ImageView) findViewById(Utility.resId_toolTipBubbleViewTop);
             bottomArrow = (ImageView) findViewById(
-                    R.id.com_facebook_tooltip_bubble_view_bottom_pointer);
-            bodyFrame = findViewById(R.id.com_facebook_body_frame);
-            xOut = (ImageView) findViewById(R.id.com_facebook_button_xout);
+                    Utility.resId_toolTipBubbleViewBottom);
+            bodyFrame = findViewById(Utility.resId_toolTipBodyFrame);
+            xOut = (ImageView) findViewById(Utility.resId_toolTipButtonXout);
         }
         
         public void showTopArrow() {
