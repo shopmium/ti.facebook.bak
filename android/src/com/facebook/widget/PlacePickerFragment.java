@@ -33,7 +33,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ListView;
 import com.facebook.*;
-import com.facebook.android.R;
 import com.facebook.internal.AnalyticsEvents;
 import com.facebook.model.GraphPlace;
 import com.facebook.internal.Logger;
@@ -109,7 +108,9 @@ public class PlacePickerFragment extends PickerFragment<GraphPlace> {
      *             configuration information for the Fragment.
      */
     public PlacePickerFragment(Bundle args) {
-        super(GraphPlace.class, R.layout.com_facebook_placepickerfragment, args);
+        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+        //super(GraphPlace.class, R.layout.com_facebook_placepickerfragment, args);
+        super(GraphPlace.class, Utility.resId_placePickerFragment, args);
         setPlacePickerSettingsFromBundle(args);
     }
 
@@ -244,14 +245,24 @@ public class PlacePickerFragment extends PickerFragment<GraphPlace> {
     @Override
     public void onInflate(Activity activity, AttributeSet attrs, Bundle savedInstanceState) {
         super.onInflate(activity, attrs, savedInstanceState);
-        TypedArray a = activity.obtainStyledAttributes(attrs, R.styleable.com_facebook_place_picker_fragment);
+        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+        // TypedArray a = activity.obtainStyledAttributes(attrs, R.styleable.com_facebook_place_picker_fragment);
 
-        setRadiusInMeters(a.getInt(R.styleable.com_facebook_place_picker_fragment_radius_in_meters, radiusInMeters));
-        setResultsLimit(a.getInt(R.styleable.com_facebook_place_picker_fragment_results_limit, resultsLimit));
-        if (a.hasValue(R.styleable.com_facebook_place_picker_fragment_results_limit)) {
-            setSearchText(a.getString(R.styleable.com_facebook_place_picker_fragment_search_text));
+        // setRadiusInMeters(a.getInt(R.styleable.com_facebook_place_picker_fragment_radius_in_meters, radiusInMeters));
+        // setResultsLimit(a.getInt(R.styleable.com_facebook_place_picker_fragment_results_limit, resultsLimit));
+        // if (a.hasValue(R.styleable.com_facebook_place_picker_fragment_results_limit)) {
+        //     setSearchText(a.getString(R.styleable.com_facebook_place_picker_fragment_search_text));
+        // }
+        // showSearchBox = a.getBoolean(R.styleable.com_facebook_place_picker_fragment_show_search_box, showSearchBox);
+
+        TypedArray a = activity.obtainStyledAttributes(attrs, getResources().getIntArray(Utility.resId_placePickerFragmentAttrs));
+
+        setRadiusInMeters(a.getInt(Utility.resId_placePickerFragmentRadiusInMeters, radiusInMeters));
+        setResultsLimit(a.getInt(Utility.resId_placePickerFragmentResultsLimit, resultsLimit));
+        if (a.hasValue(Utility.resId_placePickerFragmentResultsLimit)) {
+            setSearchText(a.getString(Utility.resId_placePickerFragmentSearchText));
         }
-        showSearchBox = a.getBoolean(R.styleable.com_facebook_place_picker_fragment_show_search_box, showSearchBox);
+        showSearchBox = a.getBoolean(Utility.resId_placePickerFragmentShowSearchBox, showSearchBox);
 
         a.recycle();
     }
@@ -259,14 +270,19 @@ public class PlacePickerFragment extends PickerFragment<GraphPlace> {
     @Override
     void setupViews(ViewGroup view) {
         if (showSearchBox) {
-            ListView listView = (ListView) view.findViewById(R.id.com_facebook_picker_list_view);
+            // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+            //ListView listView = (ListView) view.findViewById(R.id.com_facebook_picker_list_view);
+            //View searchHeaderView = getActivity().getLayoutInflater().inflate(
+                    //R.layout.com_facebook_picker_search_box, listView, false);
 
+            ListView listView = (ListView) view.findViewById(Utility.resId_pickerListView);
             View searchHeaderView = getActivity().getLayoutInflater().inflate(
-                    R.layout.com_facebook_picker_search_box, listView, false);
+                    Utility.resId_pickerSearchBox, listView, false);
 
             listView.addHeaderView(searchHeaderView, null, false);
 
-            searchBox = (EditText) view.findViewById(R.id.com_facebook_picker_search_text);
+            //searchBox = (EditText) view.findViewById(R.id.com_facebook_picker_search_text);
+            searchBox = (EditText) view.findViewById(Utility.resId_pickerSearchText);
 
             searchBox.addTextChangedListener(new SearchTextWatcher());
             if (!TextUtils.isEmpty(searchText)) {
@@ -317,7 +333,9 @@ public class PlacePickerFragment extends PickerFragment<GraphPlace> {
 
     @Override
     String getDefaultTitleText() {
-        return getString(R.string.com_facebook_nearby);
+        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+        //return getString(R.string.com_facebook_nearby);
+        return getString(Utility.resId_nearby);
     }
 
     @Override
@@ -347,23 +365,30 @@ public class PlacePickerFragment extends PickerFragment<GraphPlace> {
 
                 String result = null;
                 if (category != null && wereHereCount != null) {
-                    result = getString(R.string.com_facebook_placepicker_subtitle_format, category, wereHereCount);
+                    // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+                    //result = getString(R.string.com_facebook_placepicker_subtitle_format, category, wereHereCount);
+                    result = getString(Utility.resId_placePickerSubtitleFormat, category, wereHereCount);
                 } else if (category == null && wereHereCount != null) {
-                    result = getString(R.string.com_facebook_placepicker_subtitle_were_here_only_format, wereHereCount);
+                    //result = getString(R.string.com_facebook_placepicker_subtitle_were_here_only_format, wereHereCount);
+                    result = getString(Utility.resId_placePickerSubtitleWereHereOnlyFormat, wereHereCount); //TITANIUM
                 } else if (category != null && wereHereCount == null) {
-                    result = getString(R.string.com_facebook_placepicker_subtitle_catetory_only_format, category);
+                    //result = getString(R.string.com_facebook_placepicker_subtitle_catetory_only_format, category);
+                    result = getString(Utility.resId_placePickerSubtitleCatalogOnlyFormat, category); //TITANIUM
                 }
                 return result;
             }
 
             @Override
             protected int getGraphObjectRowLayoutId(GraphPlace graphObject) {
-                return R.layout.com_facebook_placepickerfragment_list_row;
+                // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+                //return R.layout.com_facebook_placepickerfragment_list_row;
+                return Utility.resId_placePickerFragmentListRow;
             }
 
             @Override
             protected int getDefaultPicture() {
-                return R.drawable.com_facebook_place_default_icon;
+                //return R.drawable.com_facebook_place_default_icon;
+                return Utility.resId_placeDefaultIcon;
             }
 
         };

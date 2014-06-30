@@ -35,7 +35,7 @@ import android.view.View;
 import android.widget.Button;
 
 import com.facebook.*;
-import com.facebook.android.R;
+//import com.facebook.android.R;
 import com.facebook.internal.AnalyticsEvents;
 import com.facebook.model.GraphUser;
 import com.facebook.internal.SessionAuthorizationType;
@@ -233,25 +233,26 @@ public class LoginButton extends Button {
             // so in case the users do not explicitly specify a style, we need
             // to use sensible defaults.
             this.setGravity(Gravity.CENTER);
-            this.setTextColor(getResources().getColor(R.color.com_facebook_loginview_text_color));
+            // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+            this.setTextColor(getResources().getColor(Utility.resId_loginViewTextColor));
             this.setTextSize(TypedValue.COMPLEX_UNIT_PX,
-                    getResources().getDimension(R.dimen.com_facebook_loginview_text_size));
+                    getResources().getDimension(Utility.resId_loginViewTextSize));
             this.setTypeface(Typeface.DEFAULT_BOLD);
             if (isInEditMode()) {
                 // cannot use a drawable in edit mode, so setting the background color instead
                 // of a background resource.
-                this.setBackgroundColor(getResources().getColor(R.color.com_facebook_blue));
+                this.setBackgroundColor(getResources().getColor(Utility.resId_blueColor));
                 // hardcoding in edit mode as getResources().getString() doesn't seem to work in IntelliJ
                 loginText = "Log in with Facebook";
             } else {
-                this.setBackgroundResource(R.drawable.com_facebook_button_blue);
-                this.setCompoundDrawablesWithIntrinsicBounds(R.drawable.com_facebook_inverse_icon, 0, 0, 0);
+                this.setBackgroundResource(Utility.resId_loginButtonImage); //TITANIUM
+                this.setCompoundDrawablesWithIntrinsicBounds(Utility.resId_inverseIcon, 0, 0, 0);
                 this.setCompoundDrawablePadding(
-                        getResources().getDimensionPixelSize(R.dimen.com_facebook_loginview_compound_drawable_padding));
-                this.setPadding(getResources().getDimensionPixelSize(R.dimen.com_facebook_loginview_padding_left),
-                        getResources().getDimensionPixelSize(R.dimen.com_facebook_loginview_padding_top),
-                        getResources().getDimensionPixelSize(R.dimen.com_facebook_loginview_padding_right),
-                        getResources().getDimensionPixelSize(R.dimen.com_facebook_loginview_padding_bottom));
+                    getResources().getDimensionPixelSize(Utility.resId_loginviewCompoundPadding));
+                this.setPadding(getResources().getDimensionPixelSize(Utility.resId_loginViewPaddingLeft),
+                        getResources().getDimensionPixelSize(Utility.resId_loginViewPaddingTop),
+                        getResources().getDimensionPixelSize(Utility.resId_loginViewPaddingRight),
+                        getResources().getDimensionPixelSize(Utility.resId_loginViewPaddingBottom));
             }
         }
         parseAttributes(attrs);
@@ -524,7 +525,7 @@ public class LoginButton extends Button {
     }
     
     /**
-     * Sets the amount of time (in milliseconds) that the tool tip will be shown to the user. The 
+     * Sets the amount of time (in milliseconds) that the tool tip will be shown to the user. The
      * default is {@value ToolTipPopup#DEFAULT_POPUP_DISPLAY_TIME}. Any value that is less than or
      * equal to zero will cause the tool tip to be displayed indefinitely.
      * @param displayTime The amount of time (in milliseconds) that the tool tip will be displayed
@@ -609,7 +610,7 @@ public class LoginButton extends Button {
     }
 
     private void finishInit() {
-        super.setOnClickListener(new LoginClickListener());
+        setOnClickListener(new LoginClickListener());
         setButtonText();
         if (!isInEditMode()) {
             sessionTracker = new SessionTracker(getContext(), new LoginButtonCallback(), null, false);
@@ -665,7 +666,7 @@ public class LoginButton extends Button {
     
     private void checkNuxSettings() {
         if (nuxMode == ToolTipMode.DISPLAY_ALWAYS) {
-            String nuxString = getResources().getString(R.string.com_facebook_tooltip_default);
+            String nuxString = getResources().getString(Utility.resId_toolTipDefault);
             displayNux(nuxString);
         } else {
             // kick off an async request
@@ -719,21 +720,21 @@ public class LoginButton extends Button {
     }
 
     private void parseAttributes(AttributeSet attrs) {
-        TypedArray a = getContext().obtainStyledAttributes(attrs, R.styleable.com_facebook_login_view);
-        confirmLogout = a.getBoolean(R.styleable.com_facebook_login_view_confirm_logout, true);
-        fetchUserInfo = a.getBoolean(R.styleable.com_facebook_login_view_fetch_user_info, true);
-        loginText = a.getString(R.styleable.com_facebook_login_view_login_text);
-        logoutText = a.getString(R.styleable.com_facebook_login_view_logout_text);
+        TypedArray a = getContext().obtainStyledAttributes(attrs, getResources().getIntArray(Utility.resId_loginView));
+        confirmLogout = a.getBoolean(Utility.resId_loginViewConfirmLogout, true);
+        fetchUserInfo = a.getBoolean(Utility.resId_loginViewFetchUserInfo, true);
+        loginText = a.getString(Utility.resId_loginViewLoginText);
+        logoutText = a.getString(Utility.resId_loginViewLogoutText);
         a.recycle();
     }
 
     private void setButtonText() {
         if (sessionTracker != null && sessionTracker.getOpenSession() != null) {
             setText((logoutText != null) ? logoutText :
-                    getResources().getString(R.string.com_facebook_loginview_log_out_button));
+                    getResources().getString(Utility.resId_loginViewLogoutButton));
         } else {
-            setText((loginText != null) ? loginText :
-                    getResources().getString(R.string.com_facebook_loginview_log_in_button));
+            setText((logoutText != null) ? logoutText :
+                    getResources().getString(Utility.resId_loginViewLoginButton));
         }
     }
 
@@ -807,13 +808,13 @@ public class LoginButton extends Button {
                 // If the Session is currently open, it must mean we need to log out
                 if (confirmLogout) {
                     // Create a confirmation dialog
-                    String logout = getResources().getString(R.string.com_facebook_loginview_log_out_action);
-                    String cancel = getResources().getString(R.string.com_facebook_loginview_cancel_action);
+                    String logout = getResources().getString(Utility.resId_loginViewLogoutAction);
+                    String cancel = getResources().getString(Utility.resId_loginViewCancelAction);
                     String message;
                     if (user != null && user.getName() != null) {
-                        message = String.format(getResources().getString(R.string.com_facebook_loginview_logged_in_as), user.getName());
+                         message = String.format(getResources().getString(Utility.resId_loginViewLoggedInAs), user.getName()); //TITANIUM
                     } else {
-                        message = getResources().getString(R.string.com_facebook_loginview_logged_in_using_facebook);
+                         message = getResources().getString(Utility.resId_loginViewLoggedUsingFacebook); //TITANIUM
                     }
                     AlertDialog.Builder builder = new AlertDialog.Builder(context);
                     builder.setMessage(message)

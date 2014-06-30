@@ -14,6 +14,24 @@
  * limitations under the License.
  */
 
+
+/**
+  * MODIFICATIONS
+  *
+  * Facebook Module
+  * Copyright (c) 2009-2013 by Appcelerator, Inc. All Rights Reserved.
+  * Please see the LICENSE included with this distribution for details.
+  */
+
+ /**
+  * NOTES
+  * Modifications made for Titanium:
+  * - In checkInternetPermission(), fetch resource ids using Resources.getIdentifier.
+  *
+  * Original file this is based on:
+  * https://github.com/facebook/facebook-android-sdk/blob/4e2e6b90fbc964ca51a81e83e802bb4a62711a78/facebook/src/com/facebook/AuthorizationClient.java
+  */
+
 package com.facebook;
 
 import android.Manifest;
@@ -26,11 +44,13 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.webkit.CookieSyncManager;
-import com.facebook.android.R;
 import com.facebook.internal.AnalyticsEvents;
 import com.facebook.internal.NativeProtocol;
 import com.facebook.internal.ServerProtocol;
 import com.facebook.internal.Utility;
+import com.facebook.model.GraphMultiResult;
+import com.facebook.model.GraphObject;
+import com.facebook.model.GraphObjectList;
 import com.facebook.model.GraphUser;
 import com.facebook.widget.WebDialog;
 import org.json.JSONException;
@@ -207,8 +227,10 @@ class AuthorizationClient implements Serializable {
 
         int permissionCheck = checkPermission(Manifest.permission.INTERNET);
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-            String errorType = context.getString(R.string.com_facebook_internet_permission_error_title);
-            String errorDescription = context.getString(R.string.com_facebook_internet_permission_error_message);
+            //String errorType = context.getString(R.string.com_facebook_internet_permission_error_title);
+            //String errorDescription = context.getString(R.string.com_facebook_internet_permission_error_message);
+            String errorType = context.getString(Utility.resId_errorTitle);
+            String errorDescription = context.getString(Utility.resId_errorMessage);
             complete(Result.createErrorResult(pendingRequest, errorType, errorDescription));
 
             return false;

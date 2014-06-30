@@ -16,7 +16,7 @@
 
 package com.facebook.model;
 
-import android.annotation.SuppressLint;
+//import android.annotation.SuppressLint;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -52,8 +52,9 @@ class JsonUtil {
             this.key = key;
             this.value = value;
         }
-
-        @SuppressLint("FieldGetter")
+        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+        // Comment out @SuppressLint since it is only for API 16+
+        //@SuppressLint("FieldGetter")
         @Override
         public String getKey() {
             return this.key;

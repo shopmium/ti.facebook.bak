@@ -16,6 +16,9 @@
 
 package com.facebook;
 
+import org.appcelerator.titanium.util.TiActivityResultHandler;
+import org.appcelerator.titanium.util.TiActivitySupport;
+
 import android.app.Activity;
 import android.content.*;
 import android.content.pm.ResolveInfo;
@@ -110,6 +113,7 @@ public class Session implements Serializable {
      */
     public static final String ACTION_ACTIVE_SESSION_CLOSED = "com.facebook.sdk.ACTIVE_SESSION_CLOSED";
 
+    public static final String APPLICATION_ID_PROPERTY = "com.facebook.sdk.ApplicationId";
     private static final Object STATIC_LOCK = new Object();
     private static Session activeSession;
     private static volatile Context staticContext;
@@ -1920,6 +1924,21 @@ public class Session implements Serializable {
             };
         }
 
+        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+        AuthorizationRequest(final Activity activity, final TiActivitySupport activitySupport, final TiActivityResultHandler resultHandler) {
+            startActivityDelegate = new StartActivityDelegate() {
+                @Override
+                public void startActivityForResult(Intent intent, int requestCode) {
+                    activitySupport.launchActivityForResult(intent, requestCode, resultHandler);
+                }
+
+                @Override
+                public Activity getActivityContext() {
+                    return activity;
+                }
+            };
+        }
+
         /**
          * Constructor to be used for V1 serialization only, DO NOT CHANGE.
          */
@@ -2121,6 +2140,19 @@ public class Session implements Serializable {
          */
         public OpenRequest(Fragment fragment) {
             super(fragment);
+        }
+
+        // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+        /**
+       * Custom version of OpenRequest for Titanium, so that the TiActivitySupport can be
+        * used to call startActivityForResult and we can hook into the result.
+        * @param activity the Activity to use to open the Session
+        * @param activitySupport the TiActivitySupport used to start the intent to login
+        * @param resultHandler the TiActivityResultHandler used to receive Activity results
+    */
+
+        public OpenRequest(Activity activity, TiActivitySupport activitySupport, TiActivityResultHandler resultHandler) {
+           super(activity, activitySupport, resultHandler);
         }
 
         /**

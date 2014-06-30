@@ -16,7 +16,7 @@
 
 package com.facebook;
 
-import android.annotation.SuppressLint;
+//import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -236,7 +236,7 @@ public final class AccessToken implements Serializable {
         return createNew(requestedPermissions, declinedPermissions, token, expires, source);
     }
 
-    @SuppressLint("FieldGetter")
+//    @SuppressLint("FieldGetter")
     static AccessToken createFromRefresh(AccessToken current, Bundle bundle) {
         // Only tokens obtained via SSO support refresh. Token refresh returns the expiration date in
         // seconds from the epoch rather than seconds from now.

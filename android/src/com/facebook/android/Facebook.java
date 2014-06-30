@@ -36,6 +36,10 @@ import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import org.appcelerator.titanium.util.TiActivityResultHandler;
+import org.appcelerator.titanium.util.TiActivitySupport;
+
+import com.facebook.Session;
 
 /**
  * THIS CLASS SHOULD BE CONSIDERED DEPRECATED.
@@ -321,6 +325,41 @@ public class Facebook {
             session.openForRead(openRequest);
         }
     }
+        
+    // *************** APPCELERATOR TITANIUM CUSTOMIZATION ***************************
+    /**
+    * Custom version of authorize() for TITANIUM, so that the TiActivitySupport
+    * can be used to call startActivityForResult and we can hook into the result.
+    */
+    public void authorize(Activity activity, TiActivitySupport activitySupport, String[] permissions,
+        int activityCode, final DialogListener listener, TiActivityResultHandler resultHandler) {
+       SessionLoginBehavior behavior = (activityCode >= 0) ? SessionLoginBehavior.SSO_WITH_FALLBACK
+            : SessionLoginBehavior.SUPPRESS_SSO;
+        checkUserSession("authorize");
+        pendingOpeningSession = new Session.Builder(activity).
+                setApplicationId(mAppId).
+                setTokenCachingStrategy(getTokenCache()).
+                build();
+        pendingAuthorizationActivity = activity;
+        pendingAuthorizationPermissions = (permissions != null) ? permissions : new String[0];
+
+        StatusCallback callback = new StatusCallback() {
+            @Override
+            public void call(Session callbackSession, SessionState state, Exception exception) {
+                // Invoke user-callback.
+                onSessionCallback(callbackSession, state, exception, listener);
+            }
+        };
+
+        // Create an openRequest using the Titanium custom version of the constructor.
+        Session.OpenRequest openRequest = new Session.OpenRequest(activity, activitySupport, resultHandler).
+                setCallback(callback).
+                setLoginBehavior(behavior).
+                setRequestCode(activityCode).
+                setPermissions(Arrays.asList(permissions)).
+                setPermissions(Arrays.asList(pendingAuthorizationPermissions));
+         openSession(pendingOpeningSession, openRequest, pendingAuthorizationPermissions.length > 0);
+     }
 
     @SuppressWarnings("deprecation")
     private void onSessionCallback(Session callbackSession, SessionState state, Exception exception,

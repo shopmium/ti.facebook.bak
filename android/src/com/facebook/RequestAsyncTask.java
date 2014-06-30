@@ -16,7 +16,7 @@
 
 package com.facebook;
 
-import android.annotation.TargetApi;
+//import android.annotation.TargetApi;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.util.Log;
@@ -32,7 +32,7 @@ import java.util.concurrent.Executor;
  * Defines an AsyncTask suitable for executing a Request in the background. May be subclassed
  * by applications having unique threading model needs.
  */
-@TargetApi(3)
+//@TargetApi(3)
 public class RequestAsyncTask extends AsyncTask<Void, Void, List<Response>> {
     private static final String TAG = RequestAsyncTask.class.getCanonicalName();
     private static Method executeOnExecutorMethod;
