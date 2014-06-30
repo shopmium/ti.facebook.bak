@@ -236,7 +236,7 @@ BOOL skipMeCall = NO;
  *
  */
 
--(id)accessToken
+-(id)getAccessToken
 {
     __block NSString * token;
     TiThreadPerformOnMainThread(^{
@@ -274,7 +274,7 @@ BOOL skipMeCall = NO;
  *
  */
 
--(id)expirationDate
+-(id)getExpirationDate
 {
     __block NSDate *expirationDate;
     TiThreadPerformOnMainThread(^{
