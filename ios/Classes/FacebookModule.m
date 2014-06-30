@@ -289,7 +289,7 @@ BOOL skipMeCall = NO;
     [FBSettings setDefaultUrlSchemeSuffix:(NSString*)args];
 }
 
--(void)getDefaultUrlSchemeSuffix
+-(NSString*)getDefaultUrlSchemeSuffix
 {
    return  [FBSettings defaultUrlSchemeSuffix];
 }
