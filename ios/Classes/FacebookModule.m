@@ -11,6 +11,7 @@
 #import "TiUtils.h"
 #import "TiApp.h"
 
+
 BOOL temporarilySuspended = NO;
 BOOL skipMeCall = NO;
 
@@ -281,6 +282,16 @@ BOOL skipMeCall = NO;
     }, YES);
 
     return expirationDate;
+}
+
+-(void)setDefaultUrlSchemeSuffix:(id)args
+{
+    [FBSettings setDefaultUrlSchemeSuffix:(NSString*)args];
+}
+
+-(void)getDefaultUrlSchemeSuffix
+{
+   return  [FBSettings defaultUrlSchemeSuffix];
 }
 
 /**

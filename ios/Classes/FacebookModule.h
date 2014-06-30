@@ -31,6 +31,7 @@
 
 -(void)authorize:(id)args;
 -(void)logout:(id)args;
-
+-(void)setDefaultUrlSchemeSuffix:(id)args;
+-(NSString*)setDefaultUrlSchemeSuffix;
 
 @end
