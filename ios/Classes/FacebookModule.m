@@ -36,6 +36,7 @@ BOOL skipMeCall = NO;
 {
 	RELEASE_TO_NIL(stateListeners);
 	RELEASE_TO_NIL(permissions);
+    RELEASE_TO_NIL(appid);
 	RELEASE_TO_NIL(uid);
 	[super dealloc];
 }
@@ -228,6 +229,15 @@ BOOL skipMeCall = NO;
     return perms;
 }
 
+-(id)appid
+{
+    __block NSString *tempid;
+    TiThreadPerformOnMainThread(^{
+        tempid = FBSettings.defaultAppID;
+    }, YES);
+
+    return tempid;
+}
 /**
  * JS example:
  *
@@ -294,11 +304,6 @@ BOOL skipMeCall = NO;
    return  [FBSettings defaultUrlSchemeSuffix];
 }
 
--(void)setDefaultAppID:(id)args
-{
-    [FBSettings setDefaultAppID:(NSString*)args];
-}
-
 /**
  * JS example:
  *
@@ -311,6 +316,12 @@ BOOL skipMeCall = NO;
 {
 	RELEASE_TO_NIL(permissions);
 	permissions = [arg retain];
+}
+
+-(void)setAppid:(id)arg
+{
+    RELEASE_TO_NIL(appid);
+    appid = [arg retain];
 }
 
 /**
@@ -351,6 +362,8 @@ BOOL skipMeCall = NO;
 
 	TiThreadPerformOnMainThread(^{
 		NSArray *permissions_ = permissions == nil ? [NSArray array] : permissions;
+        NSString *appid_ = appid == nil ? @"" : appid;
+        [FBSettings setDefaultAppID:appid_];
         [FBSession openActiveSessionWithReadPermissions:permissions_
                                            allowLoginUI:YES
                                       completionHandler:

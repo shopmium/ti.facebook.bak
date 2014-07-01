@@ -21,6 +21,7 @@
 	NSString *uid;
 	//NSString *url;
 	NSArray *permissions;
+	NSString *appid;
 	NSMutableArray *stateListeners;
 }
 
