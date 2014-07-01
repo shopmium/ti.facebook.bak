@@ -37,6 +37,7 @@ BOOL skipMeCall = NO;
 	RELEASE_TO_NIL(stateListeners);
 	RELEASE_TO_NIL(permissions);
     RELEASE_TO_NIL(appid);
+    RELEASE_TO_NIL(urlSchemeSuffix);
 	RELEASE_TO_NIL(uid);
 	[super dealloc];
 }
@@ -238,6 +239,15 @@ BOOL skipMeCall = NO;
 
     return tempid;
 }
+-(id)urlSchemeSuffix
+{
+    __block NSString *tempid;
+    TiThreadPerformOnMainThread(^{
+        tempid = FBSettings.defaultUrlSchemeSuffix;
+    }, YES);
+
+    return tempid;
+}
 /**
  * JS example:
  *
@@ -294,16 +304,6 @@ BOOL skipMeCall = NO;
     return expirationDate;
 }
 
--(void)setDefaultUrlSchemeSuffix:(id)args
-{
-    [FBSettings setDefaultUrlSchemeSuffix:(NSString*)args];
-}
-
--(NSString*)getDefaultUrlSchemeSuffix
-{
-   return  [FBSettings defaultUrlSchemeSuffix];
-}
-
 /**
  * JS example:
  *
@@ -322,6 +322,12 @@ BOOL skipMeCall = NO;
 {
     RELEASE_TO_NIL(appid);
     appid = [arg retain];
+}
+
+-(void)setUrlSchemeSuffix:(id)arg
+{
+    RELEASE_TO_NIL(urlSchemeSuffix);
+    urlSchemeSuffix = [arg retain];
 }
 
 /**
@@ -363,7 +369,9 @@ BOOL skipMeCall = NO;
 	TiThreadPerformOnMainThread(^{
 		NSArray *permissions_ = permissions == nil ? [NSArray array] : permissions;
         NSString *appid_ = appid == nil ? @"" : appid;
+        NSString *urlSchemeSuffix_ = urlSchemeSuffix == nil ? @"" : urlSchemeSuffix;
         [FBSettings setDefaultAppID:appid_];
+        [FBSettings setDefaultUrlSchemeSuffix:urlSchemeSuffix_];
         [FBSession openActiveSessionWithReadPermissions:permissions_
                                            allowLoginUI:YES
                                       completionHandler:

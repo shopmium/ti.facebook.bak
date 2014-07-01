@@ -22,6 +22,7 @@
 	//NSString *url;
 	NSArray *permissions;
 	NSString *appid;
+	NSString *urlSchemeSuffix;
 	NSMutableArray *stateListeners;
 }
 
@@ -32,8 +33,5 @@
 
 -(void)authorize:(id)args;
 -(void)logout:(id)args;
--(void)setDefaultUrlSchemeSuffix:(id)args;
--(NSString*)getDefaultUrlSchemeSuffix;
--(void)setDefaultAppID:(id)args;
 
 @end
