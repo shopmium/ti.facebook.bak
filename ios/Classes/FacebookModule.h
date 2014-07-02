@@ -33,6 +33,6 @@
 
 -(void)authorize:(id)args;
 -(void)logout:(id)args;
--(void)checkPublishPermision:(id)args;
+-(void)checkPublishPermission:(id)args;
 
 @end

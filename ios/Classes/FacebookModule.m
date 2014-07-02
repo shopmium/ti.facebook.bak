@@ -678,7 +678,7 @@ BOOL skipMeCall = NO;
     }, NO);
 }
 
--(void)checkPublishPermision:(id)args {
+-(void)checkPublishPermission:(id)args {
     KrollCallback * callback = [args objectAtIndex:0];
     TiThreadPerformOnMainThread(^{
         if (FBSession.activeSession.isOpen) {
