@@ -692,20 +692,21 @@ BOOL skipMeCall = NO;
                  [NSArray arrayWithObject:@"publish_actions"]
                  defaultAudience:FBSessionDefaultAudienceFriends
                  completionHandler:^(FBSession *session, NSError *error) {
-                     bool success = (error == nil);
-                     bool cancelled = NO;
-                     NSString * errorString = nil;
-                      int code = 0;
-                      if (!error){
+                    bool success = (error == nil);
+                    bool cancelled = NO;
+                    NSString *errorString;
+                    int *code = 0;
+                    if (!error){
                         if ([session.permissions indexOfObject:@"publish_actions"] == NSNotFound) {
-                              // Publish permissions not found
-                              success = NO;
-                          } else {
-                              // Publish permissions found,
-                              success = YES;
-                              // Refreshes the current permissions for the session.
-                              [session refreshPermissionsWithCompletionHandler:^(FBSession *session, NSError *error) {}];
-                          }
+                            // Publish permissions not found
+                            success = NO;
+                            cancelled = YES;
+                        } else {
+                            // Publish permissions found
+                            success = YES;
+                            // Refreshes the current permissions for the session.
+                            [session refreshPermissionsWithCompletionHandler:^(FBSession *session, NSError *error) {}];
+                        }
                       } else {
                           // There was an error, handle it
                           // See https://developers.facebook.com/docs/ios/errors/
@@ -715,7 +716,9 @@ BOOL skipMeCall = NO;
                           {
                               code = -1;
                           }
-                          if (error.fberrorShouldNotifyUser) {
+                          if (error.fberrorCategory == FBErrorCategoryUserCancelled) {
+                              cancelled = YES;
+                          } else if (error.fberrorShouldNotifyUser) {
                              errorString = error.fberrorUserMessage;
                           } else {
                              errorString = @"An unexpected error...";
@@ -725,8 +728,8 @@ BOOL skipMeCall = NO;
                       NSNumber * errorCode = [NSNumber numberWithInteger:code];
                       NSDictionary * propertiesDict = [[NSDictionary alloc] initWithObjectsAndKeys:
                                                        [NSNumber numberWithBool:success],@"success",
-                                                       [NSNumber numberWithBool:cancelled],@"cancelled",
-                                                       errorCode,@"code", errorString,@"error", nil];
+                                                       [NSNumber numberWithBool:cancelled],@"cancel",
+                                                       errorCode,@"code", errorString, @"error", nil];
 
                       KrollEvent * invocationEvent = [[KrollEvent alloc] initWithCallback:callback eventObject:propertiesDict thisObject:self];
                       [[callback context] enqueue:invocationEvent];
@@ -737,8 +740,8 @@ BOOL skipMeCall = NO;
                 // If publish permission present
                 NSDictionary * propertiesDict = [[NSDictionary alloc] initWithObjectsAndKeys:
                                                  [NSNumber numberWithBool:YES],@"success",
-                                                 [NSNumber numberWithBool:NO],@"cancelled",
-                                                 @"",@"code", @"",@"error", nil];
+                                                 [NSNumber numberWithBool:NO], @"cancel",
+                                                 @"", @"code", @"", @"error", nil];
                 KrollEvent * invocationEvent = [[KrollEvent alloc] initWithCallback:callback eventObject:propertiesDict thisObject:self];
                 [[callback context] enqueue:invocationEvent];
                 [invocationEvent release];
@@ -748,7 +751,7 @@ BOOL skipMeCall = NO;
             // Session is not open
             NSDictionary * propertiesDict = [[NSDictionary alloc] initWithObjectsAndKeys:
                                              [NSNumber numberWithBool:NO],@"success",
-                                             [NSNumber numberWithBool:NO],@"cancelled",
+                                             [NSNumber numberWithBool:NO],@"cancel",
                                              @"",@"code", @"Session is not open",@"error", nil];
             KrollEvent * invocationEvent = [[KrollEvent alloc] initWithCallback:callback eventObject:propertiesDict thisObject:self];
             [[callback context] enqueue:invocationEvent];
