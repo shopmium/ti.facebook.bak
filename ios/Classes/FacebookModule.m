@@ -694,7 +694,7 @@ BOOL skipMeCall = NO;
                  completionHandler:^(FBSession *session, NSError *error) {
                     bool success = (error == nil);
                     bool cancelled = NO;
-                    NSString *errorString;
+                    NSString *errorString = nil;
                     int *code = 0;
                     if (!error){
                         if ([session.permissions indexOfObject:@"publish_actions"] == NSNotFound) {
