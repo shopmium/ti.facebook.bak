@@ -1392,4 +1392,33 @@ public class Facebook {
         + "571b6469b232d8e768a7f7ca04f7abe4a775615916c07940656b58717457b42bd"
         + "928a2";
 
+    public void authorizePublish(Activity activity, TiActivitySupport activitySupport, String[] permissions,
+        int activityCode, final DialogListener listener, TiActivityResultHandler resultHandler) {
+       SessionLoginBehavior behavior = (activityCode >= 0) ? SessionLoginBehavior.SSO_WITH_FALLBACK
+            : SessionLoginBehavior.SUPPRESS_SSO;
+        checkUserSession("authorize");
+        pendingOpeningSession = new Session.Builder(activity).
+                setApplicationId(mAppId).
+                setTokenCachingStrategy(getTokenCache()).
+                build();
+        pendingAuthorizationActivity = activity;
+        pendingAuthorizationPermissions = (permissions != null) ? permissions : new String[0];
+
+        StatusCallback callback = new StatusCallback() {
+            @Override
+            public void call(Session callbackSession, SessionState state, Exception exception) {
+                // Invoke user-callback.
+                onSessionCallback(callbackSession, state, exception, listener);
+            }
+        };
+
+        // Create an openRequest using the Titanium custom version of the constructor.
+        Session.OpenRequest openRequest = new Session.OpenRequest(activity, activitySupport, resultHandler).
+                setCallback(callback).
+                setLoginBehavior(behavior).
+                setRequestCode(activityCode).
+                setPermissions(Arrays.asList(permissions)).
+                setPermissions(Arrays.asList(pendingAuthorizationPermissions));
+         openSession(pendingOpeningSession, openRequest, pendingAuthorizationPermissions.length > 0);
+     }
 }

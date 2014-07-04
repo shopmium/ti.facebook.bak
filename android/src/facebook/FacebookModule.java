@@ -11,15 +11,24 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Collection;
 
 import org.appcelerator.kroll.KrollDict;
 import org.appcelerator.kroll.KrollFunction;
 import org.appcelerator.kroll.KrollModule;
+import org.appcelerator.kroll.KrollDict;
+import org.appcelerator.kroll.KrollFunction;
+import org.appcelerator.kroll.KrollObject;
+import org.appcelerator.kroll.KrollRuntime;
 import org.appcelerator.kroll.annotations.Kroll;
 import org.appcelerator.kroll.common.CurrentActivityListener;
 import org.appcelerator.kroll.common.Log;
 import org.appcelerator.kroll.common.TiMessenger;
+import org.appcelerator.titanium.TiBaseActivity;
 import org.appcelerator.titanium.TiApplication;
 import org.appcelerator.titanium.TiBlob;
 import org.appcelerator.titanium.TiContext;
@@ -35,6 +44,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Message;
 
 import com.facebook.android.AsyncFacebookRunner;
 import com.facebook.android.AsyncFacebookRunner.RequestListener;
@@ -45,6 +55,12 @@ import com.facebook.android.FacebookError;
 import com.facebook.android.Util;
 import com.facebook.internal.Utility;
 import com.facebook.Settings;
+import com.facebook.Session;
+import com.facebook.SessionState;
+import com.facebook.Settings;
+
+
+
 
 
 @Kroll.module(name="Facebook", id="facebook")
@@ -66,6 +82,12 @@ public class FacebookModule extends KrollModule
     public static final String PROPERTY_RESULT = "result";
     public static final String PROPERTY_PATH = "path";
     public static final String PROPERTY_METHOD = "method";
+    protected static final int MSG_INVOKE_CALLBACK = KrollModule.MSG_LAST_ID + 100;
+    @Kroll.constant public static final int UNKNOWN_ERROR = -1;
+    protected static final int MSG_LAST_ID = MSG_INVOKE_CALLBACK;
+    public static KrollObject callbackContext;
+    public static KrollFunction successCallback, cancelCallback, errorCallback;
+    private static final List<String> PERMISSIONS = Arrays.asList("publish_actions");
 
 	protected Facebook facebook = null;
 	protected String uid = null;
@@ -77,6 +99,7 @@ public class FacebookModule extends KrollModule
 	private AsyncFacebookRunner fbrunner;
 	private String appid = null;
 	private String[] permissions = new String[]{};
+	private String[] publishPerm = new String[]{"publish_actions"};
 	private boolean forceDialogAuth = true;
 
 	public FacebookModule()
@@ -601,4 +624,199 @@ public class FacebookModule extends KrollModule
 		}
 	}
 
+	/**
+	 * Object that is used to wrap required fields for async processing when invoking
+	 * success, error , etc callbacks
+	 */
+	private class CallbackWrapper
+	{
+		public TiBaseActivity callbackActivity;
+		public KrollFunction callback;
+		public KrollObject krollObject;
+		public KrollDict callbackArgs;
+
+		CallbackWrapper(TiBaseActivity callbackActivity, KrollFunction callback, KrollObject krollObject, KrollDict callbackArgs)
+		{
+			this.callbackActivity = callbackActivity;
+			this.callback = callback;
+			this.krollObject = krollObject;
+			this.callbackArgs = callbackArgs;
+		}
+	}
+
+	/**
+	 * @see org.appcelerator.kroll.KrollProxy#handleMessage(android.os.Message)
+	 */
+	@Override
+	public boolean handleMessage(Message message) {
+		switch (message.what) {
+			case MSG_INVOKE_CALLBACK: {
+				CallbackWrapper callbackWrapper = (CallbackWrapper) message.obj;
+				doInvokeCallback(callbackWrapper.callbackActivity, callbackWrapper.callback, callbackWrapper.krollObject, callbackWrapper.callbackArgs);
+
+				return true;
+			}
+		}
+
+		return super.handleMessage(message);
+	}
+
+	private void invokeCallback(TiBaseActivity callbackActivity, KrollFunction callback, KrollObject krollObject, KrollDict callbackArgs) {
+		if (KrollRuntime.getInstance().isRuntimeThread()) {
+			doInvokeCallback(callbackActivity, callback, krollObject, callbackArgs);
+
+		} else {
+			CallbackWrapper callbackWrapper = new CallbackWrapper(callbackActivity, callback, krollObject, callbackArgs);
+			Message message = getRuntimeHandler().obtainMessage(MSG_INVOKE_CALLBACK, callbackWrapper);
+			message.sendToTarget();
+		}
+	}
+
+	private void doInvokeCallback(TiBaseActivity callbackActivity, KrollFunction callback, KrollObject krollObject, KrollDict callbackArgs) {
+		if (callbackActivity.isResumed) {
+			callback.callAsync(krollObject, callbackArgs);
+		} else {
+			CallbackWrapper callbackWrapper = new CallbackWrapper(callbackActivity, callback, krollObject, callbackArgs);
+			Message message = getRuntimeHandler().obtainMessage(MSG_INVOKE_CALLBACK, callbackWrapper);
+			message.sendToTarget();
+		}
+	}
+
+	private boolean isSubsetOf(Collection<String> subset, Collection<String> superset) {
+			for (String string : subset) {
+				if (!superset.contains(string)) {
+					return false;
+				}
+			}
+		return true;
+	}
+
+	private void errorCallbackMessage(String message) {
+			if (errorCallback != null) {
+				KrollDict response = new KrollDict();
+				response.putCodeAndMessage(UNKNOWN_ERROR, message);
+				errorCallback.callAsync(callbackContext, response);
+			}
+	}
+
+	private void cancelCallbackMessage(String message) {
+			if (cancelCallback != null) {
+				KrollDict response = new KrollDict();
+				response.putCodeAndMessage(UNKNOWN_ERROR, message);
+				cancelCallback.callAsync(callbackContext, response);
+			}
+	}
+
+	private final class PublishDialogListener implements DialogListener
+	{
+		public void onComplete(Bundle values)
+		{
+			Session session = facebook.getSession();
+			if (session != null) {
+					List<String> permissions = session.getPermissions();
+					if (isSubsetOf(PERMISSIONS, permissions)) {
+						HashMap<String, String> myMap = new HashMap<String, String>();
+						myMap.put("success", "facebook publish permission success");
+						successCallback.callAsync(callbackContext, myMap);
+					} else {
+							//Cancel
+							cancelCallbackMessage("user cancelled");
+					}
+			} else {
+					errorCallbackMessage("An unexpected error, session is null");
+			}
+			debug("facebook PublishDialogListener onComplete");
+		}
+
+		public void onFacebookError(FacebookError error)
+		{
+			String errorMessage = error.getMessage();
+			Log.e(TAG, "facebook PublishDialogListener onFacebookError: " + error.getMessage(), error);
+			// There is a bug in Facebook Android SDK 3.0. When the user cancels the login by pressing the
+			// "X" button, the onFacebookError callback is called instead of onCancel.
+			// http://stackoverflow.com/questions/14237157/facebookoperationcanceledexception-not-called
+			if (errorMessage != null && errorMessage.indexOf("User canceled") > -1) {
+				//Cancel
+				cancelCallbackMessage("user cancelled");
+				return;
+			} else {
+				Log.e(TAG, "facebook PublishDialogListener onFacebookError: " + error.getMessage(), error);;
+			}
+			errorCallbackMessage("An unexpected error : "+ error.getMessage());
+
+		}
+
+		public void onError(DialogError error) {
+			Log.e(TAG, "facebook PublishDialogListener onError: " + error.getMessage(), error);
+			errorCallbackMessage("An unexpected error : "+ error.getMessage());
+		}
+
+		public void onCancel() {
+			cancelCallbackMessage("user cancelled");
+		}
+	}
+
+	@Kroll.method
+	public void checkPublishPermission(HashMap options)
+	{
+		if (options.containsKey("error")) {
+			errorCallback = (KrollFunction) options.get("error");
+		}
+		if (options.containsKey("cancel")) {
+			cancelCallback = (KrollFunction) options.get("cancel");
+		}
+		if (options.containsKey("success")) {
+			successCallback = (KrollFunction) options.get("success");
+			callbackContext = getKrollObject();
+					try {
+						if (successCallback != null) {
+							Session session = facebook.getSession();
+							if (session != null) {
+									List<String> permissions = session.getPermissions();
+									if (!isSubsetOf(PERMISSIONS, permissions)) {
+
+											final int REAUTH_ACTIVITY_CODE = 100;
+
+											final TiActivityResultHandler resultHandler = new TiActivityResultHandler() {
+													@Override
+													public void onResult(Activity activity, int requestCode, int resultCode, Intent data) {
+														Log.e(TAG, "onResult from Facebook publish request attempt. resultCode: " + resultCode, Log.DEBUG_MODE);
+														facebook.authorizeCallback(requestCode, resultCode, data);
+													}
+
+													@Override
+													public void onError(Activity activity, int requestCode, Exception e) {
+														Log.e(TAG, e.getLocalizedMessage(), e);
+													}
+											};
+
+											if (TiApplication.isUIThread()) {
+												final TiActivitySupport activitySupport  = (TiActivitySupport) TiApplication.getInstance().getCurrentActivity();
+												facebook.authorizePublish(TiApplication.getInstance().getCurrentActivity(), activitySupport, publishPerm, REAUTH_ACTIVITY_CODE, new PublishDialogListener(), resultHandler);
+											} else {
+													TiMessenger.postOnMain(new Runnable(){
+														@Override
+														public void run() {
+															final TiActivitySupport activitySupport  = (TiActivitySupport) TiApplication.getInstance().getCurrentActivity();
+															facebook.authorizePublish(TiApplication.getInstance().getCurrentActivity(), activitySupport, publishPerm, REAUTH_ACTIVITY_CODE, new PublishDialogListener(), resultHandler);
+														}
+													});
+												}
+								} else {
+										HashMap<String, String> myMap = new HashMap<String, String>();
+										myMap.put("success", "facebook publish permission success (already permission)");
+										successCallback.callAsync(callbackContext, myMap);
+								}
+							} else {
+									errorCallbackMessage("An unexpected error, session is null");
+							}
+						}
+					} catch (Throwable t) {
+						Log.e(TAG, "facebook catch error => "+t);
+						errorCallbackMessage("An unexpected error");
+					}
+		} else {
+			Log.e(TAG, "FacebookModule checkPublishPermission no success method");
+		}
+	}
 }
