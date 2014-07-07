@@ -678,87 +678,109 @@ BOOL skipMeCall = NO;
     }, NO);
 }
 
+
+-(void)publishResult:(FBSession*)session error:(NSError*)error callback:(KrollCallback*)callback {
+    bool success = (error == nil);
+    bool cancelled = NO;
+    NSString *errorString = nil;
+    int *code = 0;
+    if (!error){
+        if ([session.permissions indexOfObject:@"publish_actions"] == NSNotFound) {
+            // Publish permissions not found
+            success = NO;
+            cancelled = YES;
+        } else {
+            // Publish permissions found
+            success = YES;
+            // Refreshes the current permissions for the session.
+            [session refreshPermissionsWithCompletionHandler:^(FBSession *session, NSError *error) {}];
+        }
+    } else {
+        // There was an error, handle it
+        // See https://developers.facebook.com/docs/ios/errors/
+        success = NO;
+        code = [error code];
+        if (code == 0)
+        {
+            code = -1;
+        }
+        if (error.fberrorCategory == FBErrorCategoryUserCancelled) {
+            cancelled = YES;
+        } else if (error.fberrorShouldNotifyUser) {
+            errorString = error.fberrorUserMessage;
+        } else {
+            errorString = @"An unexpected error...";
+        }
+    }
+    NSNumber * errorCode = [NSNumber numberWithInteger:code];
+    NSDictionary * propertiesDict = [[NSDictionary alloc] initWithObjectsAndKeys:
+                                     [NSNumber numberWithBool:success],@"success",
+                                     [NSNumber numberWithBool:cancelled],@"cancel",
+                                     errorCode,@"code", errorString, @"error", nil];
+    
+    KrollEvent * invocationEvent = [[KrollEvent alloc] initWithCallback:callback eventObject:propertiesDict thisObject:self];
+    [[callback context] enqueue:invocationEvent];
+    [invocationEvent release];
+    [propertiesDict release];
+
+}
+
 -(void)checkPublishPermission:(id)args {
     KrollCallback * callback = [args objectAtIndex:0];
-    TiThreadPerformOnMainThread(^{
-        if (FBSession.activeSession.isOpen) {
-            // Refreshes the current permissions for the session, to make sure the local permissions are up to date
-            [FBSession.activeSession refreshPermissionsWithCompletionHandler:^(FBSession *session, NSError *error) {}];
-            if ([FBSession.activeSession.permissions
-                 indexOfObject:@"publish_actions"] == NSNotFound) {
-                // No permissions found in session, ask for it
-                [FBSession.activeSession
-                 requestNewPublishPermissions:
-                 [NSArray arrayWithObject:@"publish_actions"]
-                 defaultAudience:FBSessionDefaultAudienceFriends
-                 completionHandler:^(FBSession *session, NSError *error) {
-                    bool success = (error == nil);
-                    bool cancelled = NO;
-                    NSString *errorString = nil;
-                    int *code = 0;
-                    if (!error){
-                        if ([session.permissions indexOfObject:@"publish_actions"] == NSNotFound) {
-                            // Publish permissions not found
-                            success = NO;
-                            cancelled = YES;
-                        } else {
-                            // Publish permissions found
-                            success = YES;
-                            // Refreshes the current permissions for the session.
-                            [session refreshPermissionsWithCompletionHandler:^(FBSession *session, NSError *error) {}];
-                        }
-                      } else {
-                          // There was an error, handle it
-                          // See https://developers.facebook.com/docs/ios/errors/
-                          success = NO;
-                          code = [error code];
-                          if (code == 0)
-                          {
-                              code = -1;
-                          }
-                          if (error.fberrorCategory == FBErrorCategoryUserCancelled) {
-                              cancelled = YES;
-                          } else if (error.fberrorShouldNotifyUser) {
-                             errorString = error.fberrorUserMessage;
-                          } else {
-                             errorString = @"An unexpected error...";
-                         }
-                      }
-
-                      NSNumber * errorCode = [NSNumber numberWithInteger:code];
-                      NSDictionary * propertiesDict = [[NSDictionary alloc] initWithObjectsAndKeys:
-                                                       [NSNumber numberWithBool:success],@"success",
-                                                       [NSNumber numberWithBool:cancelled],@"cancel",
-                                                       errorCode,@"code", errorString, @"error", nil];
-
-                      KrollEvent * invocationEvent = [[KrollEvent alloc] initWithCallback:callback eventObject:propertiesDict thisObject:self];
-                      [[callback context] enqueue:invocationEvent];
-                      [invocationEvent release];
-                      [propertiesDict release];
-                  }];
+    NSLog(@"[DEBUG] facebook checkPublishPermission");
+    if (!FBSession.activeSession.isOpen) {
+        TiThreadPerformOnMainThread(^{
+            NSLog(@"[DEBUG] facebook remake session");
+            NSArray *permissions_ = permissions == nil ? [NSArray array] : permissions;
+            NSString *appid_ = appid == nil ? @"" : appid;
+            NSString *urlSchemeSuffix_ = urlSchemeSuffix == nil ? @"" : urlSchemeSuffix;
+            [FBSettings setDefaultAppID:appid_];
+            [FBSettings setDefaultUrlSchemeSuffix:urlSchemeSuffix_];
+            [FBSession openActiveSessionWithPublishPermissions:[NSArray arrayWithObject:@"publish_actions"] defaultAudience:FBSessionDefaultAudienceFriends allowLoginUI:YES completionHandler:^(FBSession *session, FBSessionState status, NSError *error) {
+                [self publishResult:session error:error callback:callback];
+                
+             }];
+        }, NO);
+    } else {
+        TiThreadPerformOnMainThread(^{
+            NSLog(@"[DEBUG] facebook FBSession.activeSession => %@", FBSession.activeSession);
+            if (FBSession.activeSession.isOpen) {   NSLog(@"[DEBUG] facebook is open");
+                // Refreshes the current permissions for the session, to make sure the local permissions are up to date
+                [FBSession.activeSession refreshPermissionsWithCompletionHandler:^(FBSession *session, NSError *error) {}];
+                if ([FBSession.activeSession.permissions
+                     indexOfObject:@"publish_actions"] == NSNotFound) {  NSLog(@"[DEBUG] facebook not found");
+                    // No permissions found in session, ask for it
+                    [FBSession.activeSession
+                     requestNewPublishPermissions:
+                     [NSArray arrayWithObject:@"publish_actions"]
+                     defaultAudience:FBSessionDefaultAudienceFriends
+                     completionHandler:^(FBSession *session, NSError *error) {
+                        [self publishResult:session error:error callback:callback];
+                     }];
+                } else {
+                    // If publish permission present
+                    NSDictionary * propertiesDict = [[NSDictionary alloc] initWithObjectsAndKeys:
+                                                     [NSNumber numberWithBool:YES],@"success",
+                                                     [NSNumber numberWithBool:NO], @"cancel",
+                                                     @"", @"code", @"", @"error", nil];
+                    KrollEvent * invocationEvent = [[KrollEvent alloc] initWithCallback:callback eventObject:propertiesDict thisObject:self];
+                    [[callback context] enqueue:invocationEvent];
+                    [invocationEvent release];
+                    [propertiesDict release];
+                }
             } else {
-                // If publish permission present
+                // Session is not open
                 NSDictionary * propertiesDict = [[NSDictionary alloc] initWithObjectsAndKeys:
-                                                 [NSNumber numberWithBool:YES],@"success",
-                                                 [NSNumber numberWithBool:NO], @"cancel",
-                                                 @"", @"code", @"", @"error", nil];
+                                                 [NSNumber numberWithBool:NO],@"success",
+                                                 [NSNumber numberWithBool:NO],@"cancel",
+                                                 @"",@"code", @"Session is not open",@"error", nil];
                 KrollEvent * invocationEvent = [[KrollEvent alloc] initWithCallback:callback eventObject:propertiesDict thisObject:self];
                 [[callback context] enqueue:invocationEvent];
                 [invocationEvent release];
                 [propertiesDict release];
             }
-        } else {
-            // Session is not open
-            NSDictionary * propertiesDict = [[NSDictionary alloc] initWithObjectsAndKeys:
-                                             [NSNumber numberWithBool:NO],@"success",
-                                             [NSNumber numberWithBool:NO],@"cancel",
-                                             @"",@"code", @"Session is not open",@"error", nil];
-            KrollEvent * invocationEvent = [[KrollEvent alloc] initWithCallback:callback eventObject:propertiesDict thisObject:self];
-            [[callback context] enqueue:invocationEvent];
-            [invocationEvent release];
-            [propertiesDict release];
-        }
-    }, NO);
+        }, NO);
+    }
 }
 
 #pragma mark Listener work
