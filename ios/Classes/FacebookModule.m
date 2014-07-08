@@ -678,8 +678,19 @@ BOOL skipMeCall = NO;
     }, NO);
 }
 
+-(void)publishPermissionResult:(KrollCallback*)callback withProperties:(NSDictionary*)propertiesDict {
+    KrollEvent * invocationEvent = [[KrollEvent alloc] initWithCallback:callback eventObject:propertiesDict thisObject:self];
+    [[callback context] enqueue:invocationEvent];
+    [invocationEvent release];
+    [propertiesDict release];
+}
+
 -(void)checkPublishPermission:(id)args {
-    KrollCallback * callback = [args objectAtIndex:0];
+    ENSURE_ARG_COUNT(args,1);
+    NSDictionary * callback = [args objectAtIndex:0];
+    KrollCallback * successCallback = [callback objectForKey: @"success"];
+    KrollCallback * cancelCallback =  [callback objectForKey: @"cancel"];
+    KrollCallback * errorCallback =   [callback objectForKey: @"error"];
     TiThreadPerformOnMainThread(^{
         if (FBSession.activeSession.isOpen) {
             // Refreshes the current permissions for the session, to make sure the local permissions are up to date
@@ -730,11 +741,15 @@ BOOL skipMeCall = NO;
                                                        [NSNumber numberWithBool:success],@"success",
                                                        [NSNumber numberWithBool:cancelled],@"cancel",
                                                        errorCode,@"code", errorString, @"error", nil];
-
-                      KrollEvent * invocationEvent = [[KrollEvent alloc] initWithCallback:callback eventObject:propertiesDict thisObject:self];
-                      [[callback context] enqueue:invocationEvent];
-                      [invocationEvent release];
-                      [propertiesDict release];
+                     
+                     if (success) {
+                         [self publishPermissionResult:successCallback withProperties:propertiesDict];
+                     } else if (cancelled) {
+                         [self publishPermissionResult:cancelCallback withProperties:propertiesDict];
+                     } else {
+                         [self publishPermissionResult:errorCallback withProperties:propertiesDict];
+                     }
+        
                   }];
             } else {
                 // If publish permission present
@@ -742,10 +757,7 @@ BOOL skipMeCall = NO;
                                                  [NSNumber numberWithBool:YES],@"success",
                                                  [NSNumber numberWithBool:NO], @"cancel",
                                                  @"", @"code", @"", @"error", nil];
-                KrollEvent * invocationEvent = [[KrollEvent alloc] initWithCallback:callback eventObject:propertiesDict thisObject:self];
-                [[callback context] enqueue:invocationEvent];
-                [invocationEvent release];
-                [propertiesDict release];
+                [self publishPermissionResult:successCallback withProperties:propertiesDict];
             }
         } else {
             // Session is not open
@@ -753,10 +765,7 @@ BOOL skipMeCall = NO;
                                              [NSNumber numberWithBool:NO],@"success",
                                              [NSNumber numberWithBool:NO],@"cancel",
                                              @"",@"code", @"Session is not open",@"error", nil];
-            KrollEvent * invocationEvent = [[KrollEvent alloc] initWithCallback:callback eventObject:propertiesDict thisObject:self];
-            [[callback context] enqueue:invocationEvent];
-            [invocationEvent release];
-            [propertiesDict release];
+           [self publishPermissionResult:errorCallback withProperties:propertiesDict];
         }
     }, NO);
 }
