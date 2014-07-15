@@ -58,6 +58,9 @@ import com.facebook.Settings;
 import com.facebook.Session;
 import com.facebook.SessionState;
 import com.facebook.Settings;
+import com.facebook.widget.WebDialog;
+import com.facebook.FacebookException;
+import com.facebook.FacebookOperationCanceledException;
 
 
 
@@ -753,6 +756,67 @@ public class FacebookModule extends KrollModule
 
 		public void onCancel() {
 			cancelCallbackMessage("user cancelled");
+		}
+	}
+
+	@Kroll.method
+	public void shareDialog(HashMap options) {
+		if (options.containsKey("error")) {
+			errorCallback = (KrollFunction) options.get("error");
+		}
+		if (options.containsKey("cancel")) {
+			cancelCallback = (KrollFunction) options.get("cancel");
+		}
+		if (options.containsKey("success")) {
+			successCallback = (KrollFunction) options.get("success");
+			callbackContext = getKrollObject();
+			try {
+					Bundle params = new Bundle();
+					params.putString("name",  (String) options.get("title"));
+					params.putString("caption", "");
+					params.putString("description", (String) options.get("message"));
+					params.putString("link", (String) options.get("url"));
+					params.putString("picture", (String) options.get("url_image"));
+					WebDialog feedDialog = (
+						new WebDialog.FeedDialogBuilder(TiApplication.getInstance().getCurrentActivity(),
+							facebook.getSession(),
+							params)).setOnCompleteListener(new WebDialog.OnCompleteListener() {
+									@Override
+									public void onComplete(Bundle values,
+										FacebookException error) {
+											if (error == null) {
+													// When the story is posted, echo the success
+													// and the post Id.
+												final String postId = values.getString("post_id");
+												if (postId != null) {
+													Log.e(TAG, "Posted story, id: " + postId, Log.DEBUG_MODE);
+														HashMap<String, String> myMap = new HashMap<String, String>();
+														myMap.put("success", "facebook shareDialog success");
+														successCallback.callAsync(callbackContext, myMap);
+												} else {
+														// User clicked the Cancel button
+														Log.e(TAG, "User clicked the Cancel button ", Log.DEBUG_MODE);
+														cancelCallbackMessage("user cancelled");
+												}
+											} else if (error instanceof FacebookOperationCanceledException) {
+													// User clicked the "x" button
+													Log.e(TAG, "User clicked the x button", Log.DEBUG_MODE);
+													cancelCallbackMessage("user cancelled");
+											} else {
+												// Generic, ex: network error
+												Log.e(TAG, "Error posting story", Log.DEBUG_MODE);
+												errorCallbackMessage("An unexpected error");
+											}
+										}
+									})
+							.build();
+						feedDialog.show();
+					} catch (Throwable t) {
+						Log.e(TAG, "facebook catch error => "+t);
+						errorCallbackMessage("An unexpected error");
+					}
+		} else {
+			Log.e(TAG, "FacebookModule shareDialog no success method");
 		}
 	}
 
