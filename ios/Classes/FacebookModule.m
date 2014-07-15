@@ -770,6 +770,59 @@ BOOL skipMeCall = NO;
     }, NO);
 }
 
+-(void)shareDialog:(id)args {
+    ENSURE_ARG_COUNT(args,1);
+    NSDictionary * dict = [args objectAtIndex:0];
+    NSString * stringUrl            = [NSString stringWithFormat:@"%@",[dict objectForKey:@"url"]];
+    NSString * stringTitle          = [NSString stringWithFormat:@"%@",[dict objectForKey:@"title"]];
+    NSString * stringMessage        = [NSString stringWithFormat:@"%@",[dict objectForKey:@"message"]];
+    NSString * stringUrlImage       = [NSString stringWithFormat:@"%@",[dict objectForKey:@"url_image"]];
+    KrollCallback * successCallback = [dict objectForKey: @"success"];
+    KrollCallback * errorCallback   = [dict objectForKey: @"error"];
+    TiThreadPerformOnMainThread(^{
+
+        NSURL *urlToShare = [NSURL URLWithString:stringUrl];
+        FBLinkShareParams *params = [[FBLinkShareParams alloc] initWithLink:urlToShare
+        name:stringTitle
+        caption:nil
+        description:stringMessage
+        picture:[NSURL URLWithString:stringUrlImage]];
+        
+        BOOL isSuccessful = NO;
+        if (canShare && [FBDialogs canPresentShareDialogWithParams:params]) {
+            FBAppCall *appCall = [FBDialogs presentShareDialogWithParams:params
+            clientState:nil
+            handler:^(FBAppCall *call, NSDictionary *results, NSError *error) {
+                bool success;
+                if (!error && (appCall != nil)) {
+                    success = YES;
+                    NSLog(@"Facebook share Success!");
+                } else {
+                    success = NO;
+                    NSLog(@"Facebook share Error: %@", error.description);
+                }
+             
+                NSDictionary * propertiesDict = [[NSDictionary alloc] initWithObjectsAndKeys:
+                                                 [NSNumber numberWithBool:success],@"success",
+                                                  @"An unexpected error...", @"error", nil];
+                if (success) {
+                    [self publishPermissionResult:successCallback withProperties:propertiesDict];
+                }else {
+                    [self publishPermissionResult:errorCallback withProperties:propertiesDict];
+                }
+
+            }];
+            isSuccessful = (appCall  != nil);
+        } else {
+            NSDictionary * propertiesDict = [[NSDictionary alloc] initWithObjectsAndKeys:
+                                             [NSNumber numberWithBool:NO],@"success",
+                                             @"An unexpected error...", @"error", nil];
+            [self publishPermissionResult:errorCallback withProperties:propertiesDict];
+        }
+        
+    }, NO);
+}
+
 #pragma mark Listener work
 
 -(void)fireLogin:(id)result cancelled:(BOOL)cancelled withError:(NSError *)error
