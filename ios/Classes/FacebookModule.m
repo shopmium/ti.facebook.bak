@@ -778,6 +778,7 @@ BOOL skipMeCall = NO;
     NSString * stringMessage        = [NSString stringWithFormat:@"%@",[dict objectForKey:@"message"]];
     NSString * stringUrlImage       = [NSString stringWithFormat:@"%@",[dict objectForKey:@"url_image"]];
     KrollCallback * successCallback = [dict objectForKey: @"success"];
+    KrollCallback * cancelCallback  = [dict objectForKey: @"cancel"];
     KrollCallback * errorCallback   = [dict objectForKey: @"error"];
     TiThreadPerformOnMainThread(^{
 
@@ -788,15 +789,21 @@ BOOL skipMeCall = NO;
         description:stringMessage
         picture:[NSURL URLWithString:stringUrlImage]];
         
-        BOOL isSuccessful = NO;
         if ([FBDialogs canPresentShareDialogWithParams:params]) {
             FBAppCall *appCall = [FBDialogs presentShareDialogWithParams:params
             clientState:nil
             handler:^(FBAppCall *call, NSDictionary *results, NSError *error) {
                 bool success;
+                bool cancelled = NO;
                 if (!error) {
-                    success = YES;
-                    NSLog(@"Facebook share Success!");
+                    if ([[results objectForKey: @"completionGesture"] isEqualToString:@"cancel"]) {
+                        success = NO;
+                        cancelled = YES;
+                        NSLog(@"Facebook share Cancel");
+                    } else {
+                        success = YES;
+                        NSLog(@"Facebook share Success!");
+                    }
                 } else {
                     success = NO;
                     NSLog(@"Facebook share Error: %@", error.description);
@@ -804,10 +811,13 @@ BOOL skipMeCall = NO;
              
                 NSDictionary * propertiesDict = [[NSDictionary alloc] initWithObjectsAndKeys:
                                                  [NSNumber numberWithBool:success],@"success",
+                                                 [NSNumber numberWithBool:cancelled],@"cancel",
                                                   @"An unexpected error...", @"error", nil];
                 if (success) {
                     [self publishPermissionResult:successCallback withProperties:propertiesDict];
-                }else {
+                } else if (cancelled) {
+                    [self publishPermissionResult:cancelCallback withProperties:propertiesDict];
+                } else {
                     [self publishPermissionResult:errorCallback withProperties:propertiesDict];
                 }
 
@@ -815,6 +825,7 @@ BOOL skipMeCall = NO;
         } else {
             NSDictionary * propertiesDict = [[NSDictionary alloc] initWithObjectsAndKeys:
                                              [NSNumber numberWithBool:NO],@"success",
+                                             [NSNumber numberWithBool:NO],@"cancel",
                                              @"An unexpected error...", @"error", nil];
             [self publishPermissionResult:errorCallback withProperties:propertiesDict];
         }
