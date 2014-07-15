@@ -789,12 +789,12 @@ BOOL skipMeCall = NO;
         picture:[NSURL URLWithString:stringUrlImage]];
         
         BOOL isSuccessful = NO;
-        if (canShare && [FBDialogs canPresentShareDialogWithParams:params]) {
+        if ([FBDialogs canPresentShareDialogWithParams:params]) {
             FBAppCall *appCall = [FBDialogs presentShareDialogWithParams:params
             clientState:nil
             handler:^(FBAppCall *call, NSDictionary *results, NSError *error) {
                 bool success;
-                if (!error && (appCall != nil)) {
+                if (!error) {
                     success = YES;
                     NSLog(@"Facebook share Success!");
                 } else {
@@ -812,7 +812,6 @@ BOOL skipMeCall = NO;
                 }
 
             }];
-            isSuccessful = (appCall  != nil);
         } else {
             NSDictionary * propertiesDict = [[NSDictionary alloc] initWithObjectsAndKeys:
                                              [NSNumber numberWithBool:NO],@"success",
