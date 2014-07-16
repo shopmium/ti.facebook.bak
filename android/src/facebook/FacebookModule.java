@@ -61,13 +61,14 @@ import com.facebook.Settings;
 import com.facebook.widget.WebDialog;
 import com.facebook.FacebookException;
 import com.facebook.FacebookOperationCanceledException;
-
+import com.facebook.widget.FacebookDialog;
+import com.facebook.UiLifecycleHelper;
 
 
 
 
 @Kroll.module(name="Facebook", id="facebook")
-public class FacebookModule extends KrollModule
+public class FacebookModule extends KrollModule implements TiActivityResultHandler
 {
 	protected static final String TAG = "FacebookModule";
 
@@ -104,6 +105,8 @@ public class FacebookModule extends KrollModule
 	private String[] permissions = new String[]{};
 	private String[] publishPerm = new String[]{"publish_actions"};
 	private boolean forceDialogAuth = true;
+	private UiLifecycleHelper uiHelper;
+	protected int requestCode;
 
 	public FacebookModule()
 	{
@@ -694,7 +697,7 @@ public class FacebookModule extends KrollModule
 		return true;
 	}
 
-	private void errorCallbackMessage(String message) {
+	private static void errorCallbackMessage(String message) {
 			if (errorCallback != null) {
 				KrollDict response = new KrollDict();
 				response.putCodeAndMessage(UNKNOWN_ERROR, message);
@@ -702,7 +705,7 @@ public class FacebookModule extends KrollModule
 			}
 	}
 
-	private void cancelCallbackMessage(String message) {
+	private static void cancelCallbackMessage(String message) {
 			if (cancelCallback != null) {
 				KrollDict response = new KrollDict();
 				response.putCodeAndMessage(UNKNOWN_ERROR, message);
@@ -759,6 +762,47 @@ public class FacebookModule extends KrollModule
 		}
 	}
 
+
+	public static FacebookDialog.Callback nativeDialogCallback = new FacebookDialog.Callback() {
+			@Override
+			public void onComplete(FacebookDialog.PendingCall pendingCall, Bundle data) {
+				boolean resetSelections = true;
+				if (FacebookDialog.getNativeDialogDidComplete(data)) {
+					if (FacebookDialog.COMPLETION_GESTURE_CANCEL.equals(FacebookDialog.getNativeDialogCompletionGesture(data))) {
+						// Leave selections alone if user canceled.
+						resetSelections = false;
+						cancelCallbackMessage("user cancelled");
+					} else {
+						resetSelections = false;
+						HashMap<String, String> myMap = new HashMap<String, String>();
+						myMap.put("success", "facebook share dialog permission success");
+						successCallback.callAsync(callbackContext, myMap);
+					}
+				}
+
+				if (resetSelections) {
+					errorCallbackMessage("An unexpected error...");
+				}
+			}
+			@Override
+			public void onError(FacebookDialog.PendingCall pendingCall, Exception error, Bundle data) {
+				errorCallbackMessage("An unexpected error : "+ error.getMessage());
+			}
+	};
+
+	@Override
+	public void onResult(Activity activity, int requestCode, int resultCode, Intent data)
+	{
+		Log.e(TAG, "facebook onResult Called");
+	}
+
+	@Override
+	public void onError(Activity activity, int requestCode, Exception e)
+	{
+		Log.e(TAG, "facebook onError Called "+ e.getMessage());
+		errorCallbackMessage("An unexpected error : "+ e.getMessage());
+	}
+
 	@Kroll.method
 	public void shareDialog(HashMap options) {
 		if (options.containsKey("error")) {
@@ -771,46 +815,61 @@ public class FacebookModule extends KrollModule
 			successCallback = (KrollFunction) options.get("success");
 			callbackContext = getKrollObject();
 			try {
-					Bundle params = new Bundle();
-					params.putString("name",  (String) options.get("title"));
-					params.putString("caption", "");
-					params.putString("description", (String) options.get("message"));
-					params.putString("link", (String) options.get("url"));
-					params.putString("picture", (String) options.get("url_image"));
-					WebDialog feedDialog = (
-						new WebDialog.FeedDialogBuilder(TiApplication.getInstance().getCurrentActivity(),
-							facebook.getSession(),
-							params)).setOnCompleteListener(new WebDialog.OnCompleteListener() {
-									@Override
-									public void onComplete(Bundle values,
-										FacebookException error) {
-											if (error == null) {
-													// When the story is posted, echo the success
-													// and the post Id.
-												final String postId = values.getString("post_id");
-												if (postId != null) {
-													Log.e(TAG, "Posted story, id: " + postId, Log.DEBUG_MODE);
-														HashMap<String, String> myMap = new HashMap<String, String>();
-														myMap.put("success", "facebook shareDialog success");
-														successCallback.callAsync(callbackContext, myMap);
-												} else {
-														// User clicked the Cancel button
-														Log.e(TAG, "User clicked the Cancel button ", Log.DEBUG_MODE);
+				if (FacebookDialog.canPresentShareDialog(TiApplication.getInstance().getCurrentActivity(),
+					FacebookDialog.ShareDialogFeature.SHARE_DIALOG)) {
+
+						Activity activity = getTiContext().getTiApp().getCurrentActivity();
+						TiActivitySupport support = (TiActivitySupport) activity;
+						requestCode = support.getUniqueResultCode();
+
+						Intent fbActivity = new Intent(activity, LaunchFacebookActivity.class);
+						fbActivity.putExtra(LaunchFacebookActivity.URL, (String) options.get("url"));
+						fbActivity.putExtra(LaunchFacebookActivity.TITLE, (String) options.get("title"));
+						fbActivity.putExtra(LaunchFacebookActivity.MESSAGE, (String) options.get("message"));
+						fbActivity.putExtra(LaunchFacebookActivity.URL_IMAGE, (String) options.get("url_image"));
+						support.launchActivityForResult(fbActivity, requestCode, this);
+					} else {
+						// Fallback. For example, publish the post using the Feed Dialog
+						Bundle params = new Bundle();
+						params.putString("link", (String) options.get("url"));
+						params.putString("name",  (String) options.get("title"));
+						params.putString("description", (String) options.get("message"));
+						params.putString("picture", (String) options.get("url_image"));
+						WebDialog feedDialog = (
+							new WebDialog.FeedDialogBuilder(TiApplication.getInstance().getCurrentActivity(),
+								facebook.getSession(),
+								params)).setOnCompleteListener(new WebDialog.OnCompleteListener() {
+										@Override
+										public void onComplete(Bundle values,
+											FacebookException error) {
+												if (error == null) {
+														// When the story is posted, echo the success
+														// and the post Id.
+													final String postId = values.getString("post_id");
+													if (postId != null) {
+														Log.e(TAG, "Posted story, id: " + postId, Log.DEBUG_MODE);
+															HashMap<String, String> myMap = new HashMap<String, String>();
+															myMap.put("success", "facebook shareDialog success");
+															successCallback.callAsync(callbackContext, myMap);
+													} else {
+															// User clicked the Cancel button
+															Log.e(TAG, "User clicked the Cancel button ", Log.DEBUG_MODE);
+															cancelCallbackMessage("user cancelled");
+													}
+												} else if (error instanceof FacebookOperationCanceledException) {
+														// User clicked the "x" button
+														Log.e(TAG, "User clicked the x button", Log.DEBUG_MODE);
 														cancelCallbackMessage("user cancelled");
+												} else {
+													// Generic, ex: network error
+													Log.e(TAG, "Error posting story", Log.DEBUG_MODE);
+													errorCallbackMessage("An unexpected error");
 												}
-											} else if (error instanceof FacebookOperationCanceledException) {
-													// User clicked the "x" button
-													Log.e(TAG, "User clicked the x button", Log.DEBUG_MODE);
-													cancelCallbackMessage("user cancelled");
-											} else {
-												// Generic, ex: network error
-												Log.e(TAG, "Error posting story", Log.DEBUG_MODE);
-												errorCallbackMessage("An unexpected error");
 											}
-										}
-									})
-							.build();
-						feedDialog.show();
+										})
+								.build();
+							feedDialog.show();
+						}
 					} catch (Throwable t) {
 						Log.e(TAG, "facebook catch error => "+t);
 						errorCallbackMessage("An unexpected error");
