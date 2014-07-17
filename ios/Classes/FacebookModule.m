@@ -770,6 +770,18 @@ BOOL skipMeCall = NO;
     }, NO);
 }
 
+- (NSDictionary*)parseURLParams:(NSString *)query {
+    NSArray *pairs = [query componentsSeparatedByString:@"&"];
+    NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
+    for (NSString *pair in pairs) {
+        NSArray *kv = [pair componentsSeparatedByString:@"="];
+        NSString *val =
+        [kv[1] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+        params[kv[0]] = val;
+    }
+    return params;
+}
+
 -(void)shareDialog:(id)args {
     ENSURE_ARG_COUNT(args,1);
     NSDictionary * dict = [args objectAtIndex:0];
@@ -823,11 +835,65 @@ BOOL skipMeCall = NO;
 
             }];
         } else {
-            NSDictionary * propertiesDict = [[NSDictionary alloc] initWithObjectsAndKeys:
-                                             [NSNumber numberWithBool:NO],@"success",
-                                             [NSNumber numberWithBool:NO],@"cancel",
-                                             @"An unexpected error...", @"error", nil];
-            [self publishPermissionResult:errorCallback withProperties:propertiesDict];
+            //Feed dialog
+            // Put together the dialog parameters
+            NSMutableDictionary *params =
+            [NSMutableDictionary dictionaryWithObjectsAndKeys:
+             stringTitle, @"name",
+             stringMessage, @"description",
+             stringUrl, @"link",
+             stringUrlImage, @"picture",
+             nil];
+            
+            // Invoke the dialog
+            [FBWebDialogs presentFeedDialogModallyWithSession:nil
+                                                   parameters:params
+                                                      handler:
+             ^(FBWebDialogResult result, NSURL *resultURL, NSError *error) {
+                 bool success;
+                 bool cancelled = NO;
+                 if (error) {
+                     // Error launching the dialog or publishing a story.
+                     NSLog(@"Error publishing story.");
+                     success = NO;
+                 } else {
+                     if (result == FBWebDialogResultDialogNotCompleted) {
+                         // User clicked the "x" icon
+                         NSLog(@"User canceled story publishing.");
+                         success = NO;
+                         cancelled = YES;
+                     } else {
+                         // Handle the publish feed callback
+                         NSDictionary *urlParams = [self parseURLParams:[resultURL query]];
+                         if (![urlParams valueForKey:@"post_id"]) {
+                             // User clicked the Cancel button
+                             NSLog(@"User canceled story publishing.");
+                             success = NO;
+                             cancelled = YES;
+                         } else {
+                             // User clicked the Share button
+                             NSString *msg = [NSString stringWithFormat:
+                                              @"Posted story, id: %@",
+                                              [urlParams valueForKey:@"post_id"]];
+                             NSLog(@"%@", msg);
+                             NSLog(@"Facebook share (feed) Success!");
+                             success = YES;
+                        
+                         }
+                     }
+                 }
+                 NSDictionary * propertiesDict = [[NSDictionary alloc] initWithObjectsAndKeys:
+                                                  [NSNumber numberWithBool:success],@"success",
+                                                  [NSNumber numberWithBool:cancelled],@"cancel",
+                                                  @"An unexpected error...", @"error", nil];
+                 if (success) {
+                     [self publishPermissionResult:successCallback withProperties:propertiesDict];
+                 } else if (cancelled) {
+                     [self publishPermissionResult:cancelCallback withProperties:propertiesDict];
+                 } else {
+                     [self publishPermissionResult:errorCallback withProperties:propertiesDict];
+                 }
+            }];
         }
         
     }, NO);
