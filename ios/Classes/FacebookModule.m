@@ -685,7 +685,7 @@ BOOL skipMeCall = NO;
     [propertiesDict release];
 }
 
--(id)hasPublishPermission:(id)args {
+-(id)getPublishPermission:(id)args {
     
     if (FBSession.activeSession.isOpen) {
         // Refreshes the current permissions for the session, to make sure the local permissions are up to date
