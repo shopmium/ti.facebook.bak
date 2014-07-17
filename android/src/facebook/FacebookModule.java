@@ -868,21 +868,16 @@ public class FacebookModule extends KrollModule implements TiActivityResultHandl
 											}
 										})
 								.build();
-								TiUIHelper.waitForCurrentActivity(new CurrentActivityListener() {
-										@Override
-										public void onCurrentActivityReady(Activity activity)
-										{
-											final Activity fActivity = activity;
-											fActivity.runOnUiThread(new Runnable()
-											{
-												@Override
-												public void run()
-												{
-													feedDialog.show();
-												}
-											});
-										}
-								});
+								if (TiApplication.isUIThread()) {
+									feedDialog.show();
+								} else {
+										TiMessenger.postOnMain(new Runnable(){
+											@Override
+											public void run() {
+												feedDialog.show();
+											}
+										});
+								}
 						}
 					} catch (Throwable t) {
 						Log.e(TAG, "facebook catch error => "+t);
@@ -894,7 +889,7 @@ public class FacebookModule extends KrollModule implements TiActivityResultHandl
 	}
 
 	@Kroll.getProperty @Kroll.method
-	public boolean hasPublishPermission()
+	public boolean getPublishPermission()
 	{
 		Session session = facebook.getSession();
 		if (session != null) {
