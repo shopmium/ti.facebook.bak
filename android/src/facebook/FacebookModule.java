@@ -835,7 +835,7 @@ public class FacebookModule extends KrollModule implements TiActivityResultHandl
 						params.putString("name",  (String) options.get("title"));
 						params.putString("description", (String) options.get("message"));
 						params.putString("picture", (String) options.get("url_image"));
-						WebDialog feedDialog = (
+						final WebDialog feedDialog = (
 							new WebDialog.FeedDialogBuilder(TiApplication.getInstance().getCurrentActivity(),
 								facebook.getSession(),
 								params)).setOnCompleteListener(new WebDialog.OnCompleteListener() {
@@ -868,7 +868,21 @@ public class FacebookModule extends KrollModule implements TiActivityResultHandl
 											}
 										})
 								.build();
-							feedDialog.show();
+								TiUIHelper.waitForCurrentActivity(new CurrentActivityListener() {
+										@Override
+										public void onCurrentActivityReady(Activity activity)
+										{
+											final Activity fActivity = activity;
+											fActivity.runOnUiThread(new Runnable()
+											{
+												@Override
+												public void run()
+												{
+													feedDialog.show();
+												}
+											});
+										}
+								});
 						}
 					} catch (Throwable t) {
 						Log.e(TAG, "facebook catch error => "+t);
