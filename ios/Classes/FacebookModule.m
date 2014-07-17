@@ -685,6 +685,27 @@ BOOL skipMeCall = NO;
     [propertiesDict release];
 }
 
+-(id)isPublishPermission {
+    
+    if (FBSession.activeSession.isOpen) {
+        // Refreshes the current permissions for the session, to make sure the local permissions are up to date
+        [FBSession.activeSession refreshPermissionsWithCompletionHandler:^(FBSession *session, NSError *error) {}];
+        if ([FBSession.activeSession.permissions
+             indexOfObject:@"publish_actions"] == NSNotFound) {
+            // No permissions found in session, ask for it
+            publishPermission =  NO;
+        } else {
+            // If publish permission present
+            publishPermission =  YES;
+        }
+    } else {
+        // Session is not open
+        publishPermission = NO;
+    }
+        
+    return NUMBOOL(publishPermission);
+}
+
 -(void)checkPublishPermission:(id)args {
     ENSURE_ARG_COUNT(args,1);
     NSDictionary * callback = [args objectAtIndex:0];

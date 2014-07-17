@@ -18,6 +18,7 @@
 {
 	BOOL loggedIn;
     BOOL canShare;
+    BOOL publishPermission;
 	NSString *uid;
 	//NSString *url;
 	NSArray *permissions;
