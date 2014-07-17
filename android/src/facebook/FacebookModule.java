@@ -879,6 +879,22 @@ public class FacebookModule extends KrollModule implements TiActivityResultHandl
 		}
 	}
 
+	@Kroll.getProperty @Kroll.method
+	public boolean isPublishPermission()
+	{
+		Session session = facebook.getSession();
+		if (session != null) {
+				List<String> permissions = session.getPermissions();
+				if (isSubsetOf(PERMISSIONS, permissions)) {
+					return true;
+				} else {
+					return false;
+				}
+		} else {
+			return false;
+		}
+	}
+
 	@Kroll.method
 	public void checkPublishPermission(HashMap options)
 	{
