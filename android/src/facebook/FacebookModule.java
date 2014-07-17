@@ -880,7 +880,7 @@ public class FacebookModule extends KrollModule implements TiActivityResultHandl
 	}
 
 	@Kroll.getProperty @Kroll.method
-	public boolean isPublishPermission()
+	public boolean hasPublishPermission()
 	{
 		Session session = facebook.getSession();
 		if (session != null) {
