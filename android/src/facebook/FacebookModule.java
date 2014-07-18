@@ -713,6 +713,46 @@ public class FacebookModule extends KrollModule implements TiActivityResultHandl
 			}
 	}
 
+	private static void feedDialog(Bundle params, Session session) {
+		final WebDialog feedDialog = (
+			new WebDialog.FeedDialogBuilder(TiApplication.getInstance().getCurrentActivity(),
+				session,
+				params)).setOnCompleteListener(new WebDialog.OnCompleteListener() {
+						@Override
+						public void onComplete(Bundle values,
+							FacebookException error) {
+								if (error == null) {
+										// When the story is posted, echo the success
+										// and the post Id.
+									final String postId = values.getString("post_id");
+									if (postId != null) {
+										Log.e(TAG, "Posted story, id: " + postId, Log.DEBUG_MODE);
+											HashMap<String, String> myMap = new HashMap<String, String>();
+											myMap.put("success", "facebook shareDialog success");
+											successCallback.callAsync(callbackContext, myMap);
+									} else {
+											// User clicked the Cancel button
+											Log.e(TAG, "User clicked the Cancel button ", Log.DEBUG_MODE);
+											cancelCallbackMessage("user cancelled");
+									}
+								} else if (error instanceof FacebookOperationCanceledException) {
+										// User clicked the "x" button
+										Log.e(TAG, "User clicked the x button", Log.DEBUG_MODE);
+										//cancelCallbackMessage("user cancelled");
+										HashMap<String, String> myMap = new HashMap<String, String>();
+										myMap.put("cancel", "facebook shareDialog cancelled");
+										cancelCallback.callAsync(callbackContext, myMap);
+								} else {
+									// Generic, ex: network error
+									Log.e(TAG, "Error posting story", Log.DEBUG_MODE);
+									errorCallbackMessage("An unexpected error");
+								}
+							}
+						})
+				.build();
+				feedDialog.show();
+	}
+
 	private final class PublishDialogListener implements DialogListener
 	{
 		public void onComplete(Bundle values)
@@ -830,53 +870,21 @@ public class FacebookModule extends KrollModule implements TiActivityResultHandl
 						support.launchActivityForResult(fbActivity, requestCode, this);
 					} else {
 						// Fallback. For example, publish the post using the Feed Dialog
-						Bundle params = new Bundle();
+						final Bundle params = new Bundle();
 						params.putString("link", (String) options.get("url"));
 						params.putString("name",  (String) options.get("title"));
 						params.putString("description", (String) options.get("message"));
 						params.putString("picture", (String) options.get("url_image"));
-						final WebDialog feedDialog = (
-							new WebDialog.FeedDialogBuilder(TiApplication.getInstance().getCurrentActivity(),
-								facebook.getSession(),
-								params)).setOnCompleteListener(new WebDialog.OnCompleteListener() {
-										@Override
-										public void onComplete(Bundle values,
-											FacebookException error) {
-												if (error == null) {
-														// When the story is posted, echo the success
-														// and the post Id.
-													final String postId = values.getString("post_id");
-													if (postId != null) {
-														Log.e(TAG, "Posted story, id: " + postId, Log.DEBUG_MODE);
-															HashMap<String, String> myMap = new HashMap<String, String>();
-															myMap.put("success", "facebook shareDialog success");
-															successCallback.callAsync(callbackContext, myMap);
-													} else {
-															// User clicked the Cancel button
-															Log.e(TAG, "User clicked the Cancel button ", Log.DEBUG_MODE);
-															cancelCallbackMessage("user cancelled");
-													}
-												} else if (error instanceof FacebookOperationCanceledException) {
-														// User clicked the "x" button
-														Log.e(TAG, "User clicked the x button", Log.DEBUG_MODE);
-														cancelCallbackMessage("user cancelled");
-												} else {
-													// Generic, ex: network error
-													Log.e(TAG, "Error posting story", Log.DEBUG_MODE);
-													errorCallbackMessage("An unexpected error");
-												}
-											}
-										})
-								.build();
+						final Session session = facebook.getSession();
 								if (TiApplication.isUIThread()) {
-									feedDialog.show();
+									feedDialog(params, session);
 								} else {
-										TiMessenger.postOnMain(new Runnable(){
-											@Override
-											public void run() {
-												feedDialog.show();
-											}
-										});
+									TiMessenger.postOnMain(new Runnable(){
+										@Override
+										public void run() {
+											feedDialog(params, session);
+										}
+									});
 								}
 						}
 					} catch (Throwable t) {
