@@ -713,10 +713,10 @@ public class FacebookModule extends KrollModule implements TiActivityResultHandl
 			}
 	}
 
-	private static void feedDialog(Bundle params, Session session) {
+	private static void feedDialog(Bundle params, String applicationId) {
 		final WebDialog feedDialog = (
 			new WebDialog.FeedDialogBuilder(TiApplication.getInstance().getCurrentActivity(),
-				session,
+				applicationId,
 				params)).setOnCompleteListener(new WebDialog.OnCompleteListener() {
 						@Override
 						public void onComplete(Bundle values,
@@ -875,22 +875,21 @@ public class FacebookModule extends KrollModule implements TiActivityResultHandl
 						params.putString("name",  (String) options.get("title"));
 						params.putString("description", (String) options.get("message"));
 						params.putString("picture", (String) options.get("url_image"));
-						final Session session = facebook.getSession();
-								if (TiApplication.isUIThread()) {
-									feedDialog(params, session);
-								} else {
-									TiMessenger.postOnMain(new Runnable(){
-										@Override
-										public void run() {
-											feedDialog(params, session);
-										}
-									});
-								}
-						}
-					} catch (Throwable t) {
-						Log.e(TAG, "facebook catch error => "+t);
-						errorCallbackMessage("An unexpected error");
+							if (TiApplication.isUIThread()) {
+								feedDialog(params, this.appid);
+							} else {
+								TiMessenger.postOnMain(new Runnable(){
+									@Override
+									public void run() {
+										feedDialog(params, facebook.getAppId());
+									}
+								});
+							}
 					}
+				} catch (Throwable t) {
+					Log.e(TAG, "facebook catch error => "+t);
+					errorCallbackMessage("An unexpected error");
+				}
 		} else {
 			Log.e(TAG, "FacebookModule shareDialog no success method");
 		}
