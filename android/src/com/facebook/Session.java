@@ -799,8 +799,10 @@ public class Session implements Serializable {
         if (this.tokenCachingStrategy != null) {
             this.tokenCachingStrategy.clear();
         }
-        Utility.clearFacebookCookies(staticContext);
-        Utility.clearCaches(staticContext);
+        try {
+            Utility.clearFacebookCookies(staticContext);
+            Utility.clearCaches(staticContext);
+        } catch (Exception e) {}
         close();
     }
 
