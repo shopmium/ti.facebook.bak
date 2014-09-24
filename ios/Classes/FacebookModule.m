@@ -162,8 +162,8 @@ BOOL skipMeCall = NO;
             case FBSessionStateOpen:
                 NSLog(@"[DEBUG] FBSessionStateOpen");
                 [self populateUserDetails];
-                 break;
-            case FBSessionStateClosed:
+                break;
+            case FBSessionStateClosed: break;
             case FBSessionStateClosedLoginFailed:
                 NSLog(@"[DEBUG] facebook session closed");
                 TiThreadPerformOnMainThread(^{
