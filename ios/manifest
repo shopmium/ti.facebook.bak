@@ -6,7 +6,7 @@
 # where x.y.z correspond to the Facebook SDK version
 # t is the titanium module version # for this SDK
 
-version: 3.15.s02
+version: 3.15.s03
 apiversion: 2
 description: Allows facebook integration for Titanium apps
 author: Blain Hamon
