@@ -424,6 +424,8 @@ BOOL skipMeCall = NO;
         TiThreadPerformOnMainThread(^{
             [FBSession.activeSession closeAndClearTokenInformation];
         }, NO);
+        loggedIn = NO;
+        [self fireEvent:@"logout"];
 	}
 }
 
