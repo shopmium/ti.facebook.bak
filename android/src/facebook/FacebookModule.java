@@ -64,6 +64,7 @@ import com.facebook.FacebookException;
 import com.facebook.FacebookOperationCanceledException;
 import com.facebook.widget.FacebookDialog;
 import com.facebook.UiLifecycleHelper;
+import com.facebook.AppEventsLogger;
 
 
 
