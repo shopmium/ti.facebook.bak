@@ -358,7 +358,7 @@ public class LikeView extends FrameLayout {
             return;
         }
 
-        int[] likeView = {Utility.resId_like_view};
+        int[] likeView = { Utility.resId_like_view };
         TypedArray a = getContext().obtainStyledAttributes(attrs, likeView);
         if (a == null) {
             return;
