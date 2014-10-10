@@ -54,6 +54,7 @@ import com.facebook.android.Facebook.DialogListener;
 import com.facebook.android.FacebookError;
 import com.facebook.android.Util;
 import com.facebook.internal.Utility;
+import com.facebook.AppEventsLogger;
 import com.facebook.Settings;
 import com.facebook.Session;
 import com.facebook.SessionState;
@@ -350,7 +351,7 @@ public class FacebookModule extends KrollModule implements TiActivityResultHandl
 		Log.d(TAG, " == Facebook publishInstall", Log.DEBUG_MODE);
 		Log.d(TAG, " ==== appid: " + appid, Log.DEBUG_MODE);
 		Log.d(TAG, " ==== context: " + context, Log.DEBUG_MODE);
-		Settings.publishInstallAsync(context, appid);
+		AppEventsLogger.activateApp(context, appid);
 	}
 
 	protected void completeLogin()
