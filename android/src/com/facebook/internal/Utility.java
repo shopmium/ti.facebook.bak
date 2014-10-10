@@ -33,6 +33,7 @@ import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
 import com.facebook.FacebookException;
 import com.facebook.Request;
+import com.facebook.Session;
 import com.facebook.Settings;
 import com.facebook.model.GraphObject;
 import org.json.JSONArray;
