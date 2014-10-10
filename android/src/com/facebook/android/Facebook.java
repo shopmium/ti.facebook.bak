@@ -1262,22 +1262,6 @@ public class Facebook {
         Settings.setShouldAutoPublishInstall(value);
     }
 
-    /**
-     * Manually publish install attribution to the Facebook graph.  Internally handles tracking repeat calls to prevent
-     * multiple installs being published to the graph.
-     * <p/>
-     * This method is deprecated.  See {@link Facebook} and {@link Settings} for more info.
-     *
-     * @param context the current Android context
-     * @return Always false.  Earlier versions of the API returned true if it was no longer necessary to call.
-     * Apps should ignore this value, but for compatibility we will return false to ensure repeat calls (and the
-     * underlying code will prevent duplicate network traffic).
-     */
-    @Deprecated
-    public boolean publishInstall(final Context context) {
-        Settings.publishInstallAsync(context, mAppId);
-        return false;
-    }
 
     /**
      * Callback interface for dialog requests.
