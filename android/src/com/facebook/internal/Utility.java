@@ -158,6 +158,19 @@ public final class Utility {
     public static int resId_likeboxcountview_text_color = -1;
     public static int resId_likeboxcountview_text_size = -1;
     public static int resId_likeboxcountview_text_padding = -1;
+    public static int resId_likebutton_text_color = -1;
+    public static int resId_likebutton_compound_drawable_padding = -1;
+    public static int resId_likebutton_padding_left = -1;
+    public static int resId_likebutton_padding_top = -1;
+    public static int resId_likebutton_padding_right = -1;
+    public static int resId_likebutton_padding_bottom = -1;
+    public static int resId_likebutton_text_size = -1;
+    public static int resId_button_like_selected = -1;
+    public static int resId_button_like_icon_selected = -1;
+    public static int resId_like_button_liked = -1;
+    public static int resId_button_like = -1;
+    public static int resId_button_like_icon = -1;
+    public static int resId_like_button_not_liked = -1;
 
     public static int resId_loading = -1;
     public static int resId_loginActivityLayout = -1;
@@ -974,6 +987,21 @@ public final class Utility {
        resId_likeboxcountview_text_color = resources.getIdentifier("com_facebook_likeboxcountview_text_color", "dimen", packageName);
        resId_likeboxcountview_text_padding = resources.getIdentifier("com_facebook_likeboxcountview_text_padding", "dimen", packageName);
        resId_likeboxcountview_text_size = resources.getIdentifier("com_facebook_likeboxcountview_text_size", "dimen", packageName);
+
+       resId_likebutton_text_color = resources.getIdentifier("com_facebook_likebutton_text_color", "color", packageName);
+       resId_likebutton_compound_drawable_padding = resources.getIdentifier("com_facebook_likebutton_compound_drawable_padding", "dimen", packageName);
+       resId_likebutton_padding_left = resources.getIdentifier("com_facebook_likebutton_padding_left", "dimen", packageName);
+       resId_likebutton_padding_top = resources.getIdentifier("com_facebook_likebutton_padding_top", "dimen", packageName);
+       resId_likebutton_padding_right = resources.getIdentifier("com_facebook_likebutton_padding_right", "dimen", packageName);
+       resId_likebutton_padding_bottom = resources.getIdentifier("com_facebook_likebutton_padding_bottom", "dimen", packageName);
+       resId_likebutton_text_size = resources.getIdentifier("com_facebook_likebutton_text_size", "dimen", packageName);
+       resId_button_like_selected = resources.getIdentifier("com_facebook_button_like_selected", "drawable", packageName);
+       resId_button_like_icon_selected = resources.getIdentifier("com_facebook_button_like_icon_selected", "drawable", packageName);
+       resId_like_button_liked = resources.getIdentifier("com_facebook_like_button_liked", "string", packageName);
+       resId_button_like = resources.getIdentifier("com_facebook_button_like", "drawable", packageName);
+       resId_button_like_icon = resources.getIdentifier("com_facebook_button_like_icon", "drawable", packageName);
+       resId_like_button_not_liked = resources.getIdentifier("com_facebook_like_button_not_liked", "string", packageName);
+
        resId_loading = resources.getIdentifier("com_facebook_loading", "string", packageName);
        resId_loginActivityLayout = resources.getIdentifier("com_facebook_login_activity_layout", "layout", packageName);
        resId_loginActivityProgressBar = resources.getIdentifier("com_facebook_login_activity_progress_bar", "id", packageName);
