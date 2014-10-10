@@ -158,6 +158,15 @@ public final class Utility {
     public static int resId_likeboxcountview_text_color = -1;
     public static int resId_likeboxcountview_text_size = -1;
     public static int resId_likeboxcountview_text_padding = -1;
+    public static int resId_like_view = -1;
+    public static int resId_like_view_auxiliary_view_position = -1;
+    public static int resId_like_view_foreground_color = -1;
+    public static int resId_like_view_horizontal_alignment = -1;
+    public static int resId_like_view_object_id = -1;
+    public static int resId_like_view_style = -1;    public static int resId_likeview_edge_padding = -1;
+    public static int resId_likeview_internal_padding  = -1;
+    public static int resId_likeview_text_color = -1;
+    public static int resId_likeview_text_size = -1;
     public static int resId_likebutton_text_color = -1;
     public static int resId_likebutton_compound_drawable_padding = -1;
     public static int resId_likebutton_padding_left = -1;
@@ -987,6 +996,17 @@ public final class Utility {
        resId_likeboxcountview_text_color = resources.getIdentifier("com_facebook_likeboxcountview_text_color", "dimen", packageName);
        resId_likeboxcountview_text_padding = resources.getIdentifier("com_facebook_likeboxcountview_text_padding", "dimen", packageName);
        resId_likeboxcountview_text_size = resources.getIdentifier("com_facebook_likeboxcountview_text_size", "dimen", packageName);
+
+       resId_likeview_edge_padding = resources.getIdentifier("com_facebook_likeview_edge_padding", "dimen", packageName);
+       resId_likeview_internal_padding = resources.getIdentifier("com_facebook_likeview_internal_padding", "dimen", packageName);
+       resId_likeview_text_color = resources.getIdentifier("com_facebook_likeview_text_color", "color", packageName);
+       resId_likeview_text_size = resources.getIdentifier("com_facebook_likeview_text_size", "dimen", packageName);
+       resId_like_view = resources.getIdentifier("com_facebook_like_view", "styleable", packageName);
+       resId_like_view_auxiliary_view_position = resources.getIdentifier("com_facebook_like_view_auxiliary_view_position", "styleable", packageName);
+       resId_like_view_foreground_color = resources.getIdentifier("com_facebook_like_view_foreground_color", "styleable", packageName);
+       resId_like_view_horizontal_alignment = resources.getIdentifier("com_facebook_like_view_horizontal_alignment", "styleable", packageName);
+       resId_like_view_object_id = resources.getIdentifier("com_facebook_like_view_object_id", "styleable", packageName);
+       resId_like_view_style = resources.getIdentifier("com_facebook_like_view_style", "styleable", packageName);
 
        resId_likebutton_text_color = resources.getIdentifier("com_facebook_likebutton_text_color", "color", packageName);
        resId_likebutton_compound_drawable_padding = resources.getIdentifier("com_facebook_likebutton_compound_drawable_padding", "dimen", packageName);
