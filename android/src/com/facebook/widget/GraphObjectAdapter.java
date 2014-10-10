@@ -23,7 +23,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.widget.*;
-import com.facebook.*;
+import com.facebook.FacebookException;
 import com.facebook.internal.ImageDownloader;
 import com.facebook.internal.ImageRequest;
 import com.facebook.internal.ImageResponse;
@@ -652,7 +652,11 @@ class GraphObjectAdapter<T extends GraphObject> extends BaseAdapter implements S
         if (sectionAndItem != null && sectionAndItem.graphObject != null) {
             String id = getIdOfGraphObject(sectionAndItem.graphObject);
             if (id != null) {
-                return Long.parseLong(id);
+                try {
+                     return Long.parseLong(id);
+                 } catch (NumberFormatException e) {
+                     // NOOP
+                 }
             }
         }
         return 0;

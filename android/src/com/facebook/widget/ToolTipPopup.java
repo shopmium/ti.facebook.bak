@@ -19,8 +19,6 @@ package com.facebook.widget;
 import java.lang.ref.WeakReference;
 
 //import com.facebook.android.R;
-import com.facebook.widget.LoginButton.ToolTipMode;
-
 import android.app.Activity;
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -34,26 +32,26 @@ import android.widget.TextView;
 import com.facebook.internal.Utility;
 
 public class ToolTipPopup {
-    
+
     public static enum Style {
         /**
          * The tool tip will be shown with a blue style; including a blue background and blue
          * arrows.
          */
         BLUE,
-        
+
         /**
          * The tool tip will be shown with a black style; including a black background and black
          * arrows.
          */
         BLACK
     }
-    
+
     /**
      * The default time that the tool tip will be displayed
      */
     public static final long DEFAULT_POPUP_DISPLAY_TIME = 6000;
-    
+
     private final String mText;
     private final WeakReference<View> mAnchorViewRef;
     private final Context mContext;
@@ -77,7 +75,7 @@ public class ToolTipPopup {
                     }
                 }
             };
-            
+
     /**
      * Create a new ToolTipPopup
      * @param text The text to be displayed in the tool tip
@@ -88,7 +86,7 @@ public class ToolTipPopup {
         mAnchorViewRef = new WeakReference<View>(anchor);
         mContext = anchor.getContext();
     }
-    
+
     /**
      * Sets the {@link Style} of this tool tip.
      * @param mStyle
@@ -96,7 +94,7 @@ public class ToolTipPopup {
     public void setStyle(Style mStyle) {
         this.mStyle = mStyle;
     }
-    
+
     /**
      * Display this tool tip to the user
      */
@@ -123,7 +121,7 @@ public class ToolTipPopup {
                         Utility.resId_toolTipBlackTopNub);
                 mPopupContent.xOut.setImageResource(Utility.resId_toolTipBlackXout);
             }
-            
+
             final Window window = ((Activity) mContext).getWindow();
             final View decorView = window.getDecorView();
             final int decorWidth = decorView.getWidth();
@@ -155,7 +153,7 @@ public class ToolTipPopup {
             });
         }
     }
-    
+
     /**
      * Set the time (in milliseconds) the tool tip will be displayed. Any number less than or equal
      * to 0 will cause the tool tip to be displayed indefinitely
@@ -164,7 +162,7 @@ public class ToolTipPopup {
     public void setNuxDisplayTime(long displayTime) {
         this.mNuxDisplayTime = displayTime;
     }
-    
+
     private void updateArrows() {
         if (mPopupWindow != null && mPopupWindow.isShowing()) {
             if (mPopupWindow.isAboveAnchor()) {
@@ -174,7 +172,7 @@ public class ToolTipPopup {
             }
         }
     }
-    
+
     /**
      * Dismiss the tool tip
      */
@@ -184,20 +182,20 @@ public class ToolTipPopup {
             mPopupWindow.dismiss();
         }
     }
-    
+
     private void registerObserver() {
         unregisterObserver();
         if (mAnchorViewRef.get() != null) {
             mAnchorViewRef.get().getViewTreeObserver().addOnScrollChangedListener(mScrollListener);
         }
     }
-    
+
     private void unregisterObserver() {
         if (mAnchorViewRef.get() != null) {
             mAnchorViewRef.get().getViewTreeObserver().removeOnScrollChangedListener(mScrollListener);
         }
     }
-    
+
     private class PopupContentView extends FrameLayout {
         private ImageView topArrow;
         private ImageView bottomArrow;
@@ -208,7 +206,7 @@ public class ToolTipPopup {
             super(context);
             init();
         }
-        
+
         private void init() {
             LayoutInflater inflater = LayoutInflater.from(getContext());
             inflater.inflate(Utility.resId_toolTipBubble, this);
@@ -218,17 +216,17 @@ public class ToolTipPopup {
             bodyFrame = findViewById(Utility.resId_toolTipBodyFrame);
             xOut = (ImageView) findViewById(Utility.resId_toolTipButtonXout);
         }
-        
+
         public void showTopArrow() {
             topArrow.setVisibility(View.VISIBLE);
             bottomArrow.setVisibility(View.INVISIBLE);
         }
-        
+
         public void showBottomArrow() {
             topArrow.setVisibility(View.INVISIBLE);
             bottomArrow.setVisibility(View.VISIBLE);
         }
-        
+
         // Expose so popup content can be sized
         @Override
         public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
