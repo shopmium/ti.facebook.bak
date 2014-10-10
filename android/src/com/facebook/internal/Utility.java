@@ -152,7 +152,10 @@ public final class Utility {
     public static int resId_inverseIcon = -1;
     public static int resId_likeboxcountview_caret_height = -1;
     public static int resId_likeboxcountview_caret_width = -1;
+    public static int resId_likeboxcountview_border_color = -1;
     public static int resId_likeboxcountview_border_radius = -1;
+    public static int resId_likeboxcountview_border_width = -1;
+
     public static int resId_loading = -1;
     public static int resId_loginActivityLayout = -1;
     public static int resId_loginActivityProgressBar = -1;
