@@ -372,7 +372,7 @@ public class LikeView extends FrameLayout {
         }
 
         auxiliaryViewPosition = AuxiliaryViewPosition.fromInt(
-                a.getInt(Utility.like_view_auxiliary_view_position,
+                a.getInt(Utility.resId_like_view_auxiliary_view_position,
                         AuxiliaryViewPosition.DEFAULT.getValue()));
         if (auxiliaryViewPosition == null) {
             throw new IllegalArgumentException("Unsupported value for LikeView 'auxiliary_view_position'");
