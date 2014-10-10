@@ -155,6 +155,9 @@ public final class Utility {
     public static int resId_likeboxcountview_border_color = -1;
     public static int resId_likeboxcountview_border_radius = -1;
     public static int resId_likeboxcountview_border_width = -1;
+    public static int resId_likeboxcountview_text_color = -1;
+    public static int resId_likeboxcountview_text_size = -1;
+    public static int resId_likeboxcountview_text_padding = -1;
 
     public static int resId_loading = -1;
     public static int resId_loginActivityLayout = -1;
@@ -968,6 +971,9 @@ public final class Utility {
        resId_likeboxcountview_border_color = resources.getIdentifier("com_facebook_likeboxcountview_border_color", "dimen", packageName);
        resId_likeboxcountview_border_radius = resources.getIdentifier("com_facebook_likeboxcountview_border_radius", "dimen", packageName);
        resId_likeboxcountview_border_width = resources.getIdentifier("com_facebook_likeboxcountview_border_width", "dimen", packageName);
+       resId_likeboxcountview_text_color = resources.getIdentifier("com_facebook_likeboxcountview_text_color", "dimen", packageName);
+       resId_likeboxcountview_text_padding = resources.getIdentifier("com_facebook_likeboxcountview_text_padding", "dimen", packageName);
+       resId_likeboxcountview_text_size = resources.getIdentifier("com_facebook_likeboxcountview_text_size", "dimen", packageName);
        resId_loading = resources.getIdentifier("com_facebook_loading", "string", packageName);
        resId_loginActivityLayout = resources.getIdentifier("com_facebook_login_activity_layout", "layout", packageName);
        resId_loginActivityProgressBar = resources.getIdentifier("com_facebook_login_activity_progress_bar", "id", packageName);
