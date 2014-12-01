@@ -54,7 +54,6 @@ import com.facebook.android.Facebook.DialogListener;
 import com.facebook.android.FacebookError;
 import com.facebook.android.Util;
 import com.facebook.internal.Utility;
-import com.facebook.AppEventsLogger;
 import com.facebook.Settings;
 import com.facebook.Session;
 import com.facebook.SessionState;
@@ -65,7 +64,7 @@ import com.facebook.FacebookOperationCanceledException;
 import com.facebook.widget.FacebookDialog;
 import com.facebook.UiLifecycleHelper;
 import com.facebook.AppEventsLogger;
-
+import com.facebook.AppEventsConstants;
 
 
 
@@ -895,6 +894,44 @@ public class FacebookModule extends KrollModule implements TiActivityResultHandl
 		} else {
 			Log.e(TAG, "FacebookModule shareDialog no success method");
 		}
+	}
+
+	@Override
+	public void onResume(Activity activity) {
+		Log.e(TAG, "facebook onResume Called");
+		super.onResume(activity);
+		AppEventsLogger.activateApp(TiApplication.getInstance().getApplicationContext());
+	}
+
+	@Override
+	public void onPause(Activity activity) {
+		Log.e(TAG, "facebook onPause Called");
+		super.onPause(activity);
+		AppEventsLogger.deactivateApp(TiApplication.getInstance().getApplicationContext());
+	}
+
+	@Kroll.method
+	public void eventCoupon(HashMap options) {
+			try {
+				AppEventsLogger logger = AppEventsLogger.newLogger(TiApplication.getInstance().getApplicationContext());
+
+				String numItems    = (options.get("numItems") != null) ? options.get("numItems").toString() : "null";
+				String contentType = (options.get("contentType") != null) ? options.get("contentType").toString() : "null";
+				String contentID   = (options.get("contentID") != null) ? options.get("contentID").toString() : "null";
+				String currency    = (options.get("currency") != null) ? options.get("currency").toString() : "null";
+				Float valueToSum   = (options.get("valueToSum") != null) ? (Float) options.get("valueToSum") : 0.00f;
+
+				Bundle params = new Bundle();
+				params.putString(AppEventsConstants.EVENT_PARAM_NUM_ITEMS, numItems);
+				params.putString(AppEventsConstants.EVENT_PARAM_CONTENT_TYPE, contentType);
+				params.putString(AppEventsConstants.EVENT_PARAM_CONTENT_ID, contentID);
+				params.putString(AppEventsConstants.EVENT_PARAM_CURRENCY, currency);
+
+				logger.logEvent(AppEventsConstants.EVENT_NAME_PURCHASED, valueToSum, params);
+
+			} catch (Throwable t) {
+				Log.e(TAG, "facebook catch event coupon error => "+t);
+			}
 	}
 
 	@Kroll.getProperty @Kroll.method
