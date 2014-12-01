@@ -61,6 +61,7 @@ BOOL skipMeCall = NO;
 -(void)resumed:(id)note
 {
 	NSLog(@"[DEBUG] facebook resumed");
+	[FBAppEvents activateApp];
 	if (!temporarilySuspended) {
         [self handleRelaunch];
     }
@@ -918,7 +919,24 @@ BOOL skipMeCall = NO;
                  }
             }];
         }
-        
+
+    }, NO);
+}
+
+-(void)eventCoupon:(id)args {
+    ENSURE_ARG_COUNT(args,1);
+    NSDictionary * dict = [args objectAtIndex:0];
+    NSString * stringNumItems    = [NSString stringWithFormat:@"%@",[dict objectForKey:@"numItems"]];
+    NSString * stringContentType = [NSString stringWithFormat:@"%@",[dict objectForKey:@"contentType"]];
+    NSString * stringContentID   = [NSString stringWithFormat:@"%@",[dict objectForKey:@"contentID"]];
+    NSString * stringCurrency    = [NSString stringWithFormat:@"%@",[dict objectForKey:@"currency"]];
+    TiThreadPerformOnMainThread(^{
+        [FBAppEvents logEvent:FBAppEventNamePurchased
+         valueToSum:[[dict objectForKey:@"valueToSum"] doubleValue]
+         parameters:@{ FBAppEventParameterNameNumItems    : stringNumItems,
+           FBAppEventParameterNameContentType : stringContentType,
+           FBAppEventParameterNameContentID   : stringContentID,
+           FBAppEventParameterNameCurrency    : stringCurrency } ];
     }, NO);
 }
 
