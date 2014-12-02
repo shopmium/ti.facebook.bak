@@ -912,26 +912,26 @@ public class FacebookModule extends KrollModule implements TiActivityResultHandl
 
 	@Kroll.method
 	public void eventCoupon(HashMap options) {
-			try {
-				AppEventsLogger logger = AppEventsLogger.newLogger(TiApplication.getInstance().getApplicationContext());
+		try {
+			AppEventsLogger logger = AppEventsLogger.newLogger(TiApplication.getInstance().getApplicationContext());
 
-				String numItems    = (options.get("numItems") != null) ? options.get("numItems").toString() : "null";
-				String contentType = (options.get("contentType") != null) ? options.get("contentType").toString() : "null";
-				String contentID   = (options.get("contentID") != null) ? options.get("contentID").toString() : "null";
-				String currency    = (options.get("currency") != null) ? options.get("currency").toString() : "null";
-				Float valueToSum   = (options.get("valueToSum") != null) ? (Float) options.get("valueToSum") : 0.00f;
+			String numItems    = (options.get("numItems") != null) ? options.get("numItems").toString() : "null";
+			String contentType = (options.get("contentType") != null) ? options.get("contentType").toString() : "null";
+			String contentID   = (options.get("contentID") != null) ? options.get("contentID").toString() : "null";
+			String currency    = (options.get("currency") != null) ? options.get("currency").toString() : "null";
+			Float valueToSum   = (options.get("valueToSum") != null) ? (Float) options.get("valueToSum") : 0.00f;
 
-				Bundle params = new Bundle();
-				params.putString(AppEventsConstants.EVENT_PARAM_NUM_ITEMS, numItems);
-				params.putString(AppEventsConstants.EVENT_PARAM_CONTENT_TYPE, contentType);
-				params.putString(AppEventsConstants.EVENT_PARAM_CONTENT_ID, contentID);
-				params.putString(AppEventsConstants.EVENT_PARAM_CURRENCY, currency);
+			Bundle params = new Bundle();
+			params.putString(AppEventsConstants.EVENT_PARAM_NUM_ITEMS, numItems);
+			params.putString(AppEventsConstants.EVENT_PARAM_CONTENT_TYPE, contentType);
+			params.putString(AppEventsConstants.EVENT_PARAM_CONTENT_ID, contentID);
+			params.putString(AppEventsConstants.EVENT_PARAM_CURRENCY, currency);
 
-				logger.logEvent(AppEventsConstants.EVENT_NAME_PURCHASED, valueToSum, params);
+			logger.logEvent(AppEventsConstants.EVENT_NAME_PURCHASED, valueToSum, params);
 
-			} catch (Throwable t) {
-				Log.e(TAG, "facebook catch event coupon error => "+t);
-			}
+		} catch (Throwable t) {
+			Log.e(TAG, "facebook catch event coupon error => "+t);
+		}
 	}
 
 	@Kroll.getProperty @Kroll.method
