@@ -940,6 +940,21 @@ BOOL skipMeCall = NO;
     }, NO);
 }
 
+-(void)eventBuyer:(id)args {
+    ENSURE_ARG_COUNT(args,1);
+    NSDictionary * dict = [args objectAtIndex:0];
+    NSString * stringNumItems    = [NSString stringWithFormat:@"%@",[dict objectForKey:@"numItems"]];
+    NSString * stringContentType = [NSString stringWithFormat:@"%@",[dict objectForKey:@"contentType"]];
+    NSString * stringContentID   = [NSString stringWithFormat:@"%@",[dict objectForKey:@"contentID"]];
+    TiThreadPerformOnMainThread(^{
+        [FBAppEvents logEvent:@"New Buyer"
+         valueToSum:0.00
+         parameters:@{ FBAppEventParameterNameNumItems    : stringNumItems,
+           FBAppEventParameterNameContentType : stringContentType,
+           FBAppEventParameterNameContentID   : stringContentID } ];
+    }, NO);
+}
+
 #pragma mark Listener work
 
 -(void)fireLogin:(id)result cancelled:(BOOL)cancelled withError:(NSError *)error
