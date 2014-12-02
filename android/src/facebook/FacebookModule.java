@@ -934,6 +934,27 @@ public class FacebookModule extends KrollModule implements TiActivityResultHandl
 		}
 	}
 
+	@Kroll.method
+	public void eventBuyer(HashMap options) {
+		try {
+			AppEventsLogger logger = AppEventsLogger.newLogger(TiApplication.getInstance().getApplicationContext());
+
+			String numItems    = (options.get("numItems") != null) ? options.get("numItems").toString() : "null";
+			String contentType = (options.get("contentType") != null) ? options.get("contentType").toString() : "null";
+			String contentID   = (options.get("contentID") != null) ? options.get("contentID").toString() : "null";
+
+			Bundle params = new Bundle();
+			params.putString(AppEventsConstants.EVENT_PARAM_NUM_ITEMS, numItems);
+			params.putString(AppEventsConstants.EVENT_PARAM_CONTENT_TYPE, contentType);
+			params.putString(AppEventsConstants.EVENT_PARAM_CONTENT_ID, contentID);
+
+			logger.logEvent("New Buyer", 0.00f, params);
+
+		} catch (Throwable t) {
+			Log.e(TAG, "facebook catch event buyer error => "+t);
+		}
+	}
+
 	@Kroll.getProperty @Kroll.method
 	public boolean getPublishPermission()
 	{
