@@ -689,7 +689,7 @@ BOOL skipMeCall = NO;
 }
 
 -(id)getPublishPermission:(id)args {
-    
+
     if (FBSession.activeSession.isOpen) {
         // Refreshes the current permissions for the session, to make sure the local permissions are up to date
         [FBSession.activeSession refreshPermissionsWithCompletionHandler:^(FBSession *session, NSError *error) {}];
@@ -705,7 +705,7 @@ BOOL skipMeCall = NO;
         // Session is not open
         publishPermission = NO;
     }
-        
+
     return NUMBOOL(publishPermission);
 }
 
@@ -765,7 +765,7 @@ BOOL skipMeCall = NO;
                                                        [NSNumber numberWithBool:success],@"success",
                                                        [NSNumber numberWithBool:cancelled],@"cancel",
                                                        errorCode,@"code", errorString, @"error", nil];
-                     
+
                      if (success) {
                          [self publishPermissionResult:successCallback withProperties:propertiesDict];
                      } else if (cancelled) {
@@ -773,7 +773,7 @@ BOOL skipMeCall = NO;
                      } else {
                          [self publishPermissionResult:errorCallback withProperties:propertiesDict];
                      }
-        
+
                   }];
             } else {
                 // If publish permission present
@@ -824,7 +824,7 @@ BOOL skipMeCall = NO;
         caption:nil
         description:stringMessage
         picture:[NSURL URLWithString:stringUrlImage]];
-        
+
         if ([FBDialogs canPresentShareDialogWithParams:params]) {
             FBAppCall *appCall = [FBDialogs presentShareDialogWithParams:params
             clientState:nil
@@ -844,7 +844,7 @@ BOOL skipMeCall = NO;
                     success = NO;
                     NSLog(@"Facebook share Error: %@", error.description);
                 }
-             
+
                 NSDictionary * propertiesDict = [[NSDictionary alloc] initWithObjectsAndKeys:
                                                  [NSNumber numberWithBool:success],@"success",
                                                  [NSNumber numberWithBool:cancelled],@"cancel",
@@ -868,7 +868,7 @@ BOOL skipMeCall = NO;
              stringUrl, @"link",
              stringUrlImage, @"picture",
              nil];
-            
+
             // Invoke the dialog
             [FBWebDialogs presentFeedDialogModallyWithSession:nil
                                                    parameters:params
@@ -902,7 +902,7 @@ BOOL skipMeCall = NO;
                              NSLog(@"%@", msg);
                              NSLog(@"Facebook share (feed) Success!");
                              success = YES;
-                        
+
                          }
                      }
                  }
