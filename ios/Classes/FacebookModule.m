@@ -609,6 +609,51 @@ BOOL skipMeCall = NO;
 	}, NO);
 }
 
+
+-(NSString*)convertParams:(NSMutableDictionary*)params
+{
+    NSString* httpMethod = nil;
+    for (NSString *key in [params allKeys])
+    {
+        id param = [params objectForKey:key];
+
+        // convert to blob
+        if ([param isKindOfClass:[TiFile class]])
+        {
+            TiFile *file = (TiFile*)param;
+            if ([file size] > 0)
+            {
+                param = [file toBlob:nil];
+            }
+            else
+            {
+                // empty file?
+                param = [[[TiBlob alloc] initWithData:[NSData data] mimetype:@"text/plain"] autorelease];
+            }
+        }
+
+        // this is an attachment, we need to convert to POST and switch to blob
+        if ([param isKindOfClass:[TiBlob class]])
+        {
+            httpMethod = @"POST";
+            TiBlob *blob = (TiBlob*)param;
+            VerboseLog(@"[DEBUG] detected blob with mime: %@",[blob mimeType]);
+            if ([[blob mimeType] hasPrefix:@"image/"])
+            {
+                UIImage *image = [blob image];
+                [params setObject:image forKey:key];
+            }
+            else
+            {
+                NSData *data = [blob data];
+                [params setObject:data forKey:key];
+            }
+        }
+    }
+    return httpMethod;
+}
+
+
 /**
  * JS example:
  *
