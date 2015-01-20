@@ -10,31 +10,31 @@
 	<string>Facebook</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
-		<key>233CFF57-D874-4A98-84E0-6CF8EE4468F1</key>
+		<key>23F4DE2DBA9F304FADDFC0636AB9C6D9A0A1DA5F</key>
 		<string>https://github.com/shopmium/ti.facebook.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
-	<string>ios/Facebook.xcodeproj/project.xcworkspace</string>
+	<string>ios/Facebook.xcodeproj</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
-		<key>233CFF57-D874-4A98-84E0-6CF8EE4468F1</key>
+		<key>23F4DE2DBA9F304FADDFC0636AB9C6D9A0A1DA5F</key>
 		<string>../../..</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
 	<string>https://github.com/shopmium/ti.facebook.git</string>
 	<key>IDESourceControlProjectVersion</key>
-	<integer>110</integer>
+	<integer>111</integer>
 	<key>IDESourceControlProjectWCCIdentifier</key>
-	<string>233CFF57-D874-4A98-84E0-6CF8EE4468F1</string>
+	<string>23F4DE2DBA9F304FADDFC0636AB9C6D9A0A1DA5F</string>
 	<key>IDESourceControlProjectWCConfigurations</key>
 	<array>
 		<dict>
 			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
 			<string>public.vcs.git</string>
 			<key>IDESourceControlWCCIdentifierKey</key>
-			<string>233CFF57-D874-4A98-84E0-6CF8EE4468F1</string>
+			<string>23F4DE2DBA9F304FADDFC0636AB9C6D9A0A1DA5F</string>
 			<key>IDESourceControlWCCName</key>
-			<string>ti</string>
+			<string>ti.facebook</string>
 		</dict>
 	</array>
 </dict>

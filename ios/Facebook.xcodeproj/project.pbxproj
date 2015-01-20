@@ -26,7 +26,6 @@
 		24DD6CFA1134B3F500162E58 /* FacebookModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 24DD6CF81134B3F500162E58 /* FacebookModule.m */; };
 		24DE9E1111C5FE74003F90F6 /* FacebookModuleAssets.h in Headers */ = {isa = PBXBuildFile; fileRef = 24DE9E0F11C5FE74003F90F6 /* FacebookModuleAssets.h */; };
 		24DE9E1211C5FE74003F90F6 /* FacebookModuleAssets.m in Sources */ = {isa = PBXBuildFile; fileRef = 24DE9E1011C5FE74003F90F6 /* FacebookModuleAssets.m */; };
-		2A7B2DA8195D68CF009518E9 /* FacebookSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2A7B2DA7195D68CF009518E9 /* FacebookSDK.framework */; };
 		2A7B2DD8195D69F7009518E9 /* FacebookSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = 2A7B2DAA195D69F7009518E9 /* FacebookSDK.h */; };
 		2A7B2DD9195D69F7009518E9 /* FBAccessTokenData.h in Headers */ = {isa = PBXBuildFile; fileRef = 2A7B2DAB195D69F7009518E9 /* FBAccessTokenData.h */; };
 		2A7B2DDA195D69F7009518E9 /* FBAppCall.h in Headers */ = {isa = PBXBuildFile; fileRef = 2A7B2DAC195D69F7009518E9 /* FBAppCall.h */; };
@@ -73,6 +72,7 @@
 		2A7B2E03195D69F7009518E9 /* FBViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 2A7B2DD5195D69F7009518E9 /* FBViewController.h */; };
 		2A7B2E04195D69F7009518E9 /* FBWebDialogs.h in Headers */ = {isa = PBXBuildFile; fileRef = 2A7B2DD6195D69F7009518E9 /* FBWebDialogs.h */; };
 		2A7B2E05195D69F7009518E9 /* NSError+FBError.h in Headers */ = {isa = PBXBuildFile; fileRef = 2A7B2DD7195D69F7009518E9 /* NSError+FBError.h */; };
+		3443BA051A6E5DF200010B04 /* FacebookSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3443BA041A6E5DF200010B04 /* FacebookSDK.framework */; };
 		AA747D9F0F9514B9006C5449 /* Facebook_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = AA747D9E0F9514B9006C5449 /* Facebook_Prefix.pch */; };
 		AACBBE4A0F95108600F1A2B1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AACBBE490F95108600F1A2B1 /* Foundation.framework */; };
 /* End PBXBuildFile section */
@@ -93,7 +93,6 @@
 		24DD6D1B1134B66800162E58 /* titanium.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = titanium.xcconfig; sourceTree = "<group>"; };
 		24DE9E0F11C5FE74003F90F6 /* FacebookModuleAssets.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FacebookModuleAssets.h; path = Classes/FacebookModuleAssets.h; sourceTree = "<group>"; };
 		24DE9E1011C5FE74003F90F6 /* FacebookModuleAssets.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FacebookModuleAssets.m; path = Classes/FacebookModuleAssets.m; sourceTree = "<group>"; };
-		2A7B2DA7195D68CF009518E9 /* FacebookSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = FacebookSDK.framework; sourceTree = "<group>"; };
 		2A7B2DAA195D69F7009518E9 /* FacebookSDK.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FacebookSDK.h; sourceTree = "<group>"; };
 		2A7B2DAB195D69F7009518E9 /* FBAccessTokenData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FBAccessTokenData.h; sourceTree = "<group>"; };
 		2A7B2DAC195D69F7009518E9 /* FBAppCall.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FBAppCall.h; sourceTree = "<group>"; };
@@ -140,6 +139,7 @@
 		2A7B2DD5195D69F7009518E9 /* FBViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FBViewController.h; sourceTree = "<group>"; };
 		2A7B2DD6195D69F7009518E9 /* FBWebDialogs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FBWebDialogs.h; sourceTree = "<group>"; };
 		2A7B2DD7195D69F7009518E9 /* NSError+FBError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSError+FBError.h"; sourceTree = "<group>"; };
+		3443BA041A6E5DF200010B04 /* FacebookSDK.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FacebookSDK.framework; path = ../../../../../Library/Frameworks/FacebookSDK.framework; sourceTree = "<group>"; };
 		AA747D9E0F9514B9006C5449 /* Facebook_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Facebook_Prefix.pch; sourceTree = SOURCE_ROOT; };
 		AACBBE490F95108600F1A2B1 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		D2AAC07E0554694100DB518D /* libFacebook.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libFacebook.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -151,7 +151,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AACBBE4A0F95108600F1A2B1 /* Foundation.framework in Frameworks */,
-				2A7B2DA8195D68CF009518E9 /* FacebookSDK.framework in Frameworks */,
+				3443BA051A6E5DF200010B04 /* FacebookSDK.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -180,7 +180,7 @@
 		0867D69AFE84028FC02AAC07 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				2A7B2DA7195D68CF009518E9 /* FacebookSDK.framework */,
+				3443BA041A6E5DF200010B04 /* FacebookSDK.framework */,
 				AACBBE490F95108600F1A2B1 /* Foundation.framework */,
 			);
 			name = Frameworks;
@@ -417,6 +417,7 @@
 					"$(inherited)",
 					/Users/Marek/Documents/Titanium_Studio_Workspace/Facebook,
 					/Users/anastasiakryukova/ti.facebook/ios,
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
 				);
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -459,6 +460,7 @@
 					"$(inherited)",
 					/Users/Marek/Documents/Titanium_Studio_Workspace/Facebook,
 					/Users/anastasiakryukova/ti.facebook/ios,
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
 				);
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_MODEL_TUNING = G5;
