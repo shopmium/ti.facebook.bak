@@ -17,7 +17,6 @@
 package com.facebook.internal;
 
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -33,17 +32,16 @@ import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
 import com.facebook.FacebookException;
 import com.facebook.Request;
-import com.facebook.Session;
 import com.facebook.Settings;
 import com.facebook.model.GraphObject;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
-import java.lang.reflect.Method;
-import java.lang.reflect.InvocationTargetException;
 
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URLConnection;
 import java.net.URLDecoder;
@@ -279,6 +277,8 @@ public final class Utility {
     public static int resId_toolTipButtonXout = -1;
     public static int resId_toolTipDefault = -1;
 
+    public static int resId_imageDownloadUnknownError = -1;
+
 
     public static class DialogFeatureConfig {
         private static DialogFeatureConfig parseDialogConfig(JSONObject dialogConfigJSON) {
@@ -513,7 +513,7 @@ public final class Utility {
         return hashWithAlgorithm(HASH_ALGORITHM_MD5, key);
     }
 
-    private static String sha1hash(String key) {
+    static String sha1hash(String key) {
         return hashWithAlgorithm(HASH_ALGORITHM_SHA1, key);
     }
 
@@ -617,17 +617,9 @@ public final class Utility {
     public static String getMetadataApplicationId(Context context) {
         Validate.notNull(context, "context");
 
-        try {
-            ApplicationInfo ai = context.getPackageManager().getApplicationInfo(
-                    context.getPackageName(), PackageManager.GET_META_DATA);
-            if (ai.metaData != null) {
-                return ai.metaData.getString(Session.APPLICATION_ID_PROPERTY);
-            }
-        } catch (PackageManager.NameNotFoundException e) {
-            // if we can't find it in the manifest, just return null
-        }
+        Settings.loadDefaultsFromMetadata(context);
 
-        return null;
+        return Settings.getApplicationId();
     }
 
     static Map<String, Object> convertJSONObjectToHashMap(JSONObject jsonObject) {
@@ -796,7 +788,9 @@ public final class Utility {
                     SharedPreferences sharedPrefs = context.getSharedPreferences(
                             APP_SETTINGS_PREFS_STORE,
                             Context.MODE_PRIVATE);
-                    sharedPrefs.edit().putString(settingsKey, resultJSON.toString()).apply();
+                    sharedPrefs.edit()
+                        .putString(settingsKey, resultJSON.toString())
+                        .apply();
                 }
 
                 initialAppSettingsLoadTask = null;
@@ -1118,6 +1112,8 @@ public final class Utility {
        resId_toolTipBodyFrame          = resources.getIdentifier("com_facebook_body_frame", "id", packageName);
        resId_toolTipButtonXout         = resources.getIdentifier("com_facebook_button_xout", "id", packageName);
        resId_toolTipDefault            = resources.getIdentifier("com_facebook_tooltip_default", "id", packageName);
+
+       resId_imageDownloadUnknownError = resources.getIdentifier("com_facebook_image_download_unknown_error", "string", packageName);
 
    }
 
