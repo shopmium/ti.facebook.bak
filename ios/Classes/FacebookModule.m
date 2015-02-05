@@ -689,6 +689,7 @@ BOOL skipMeCall = NO;
         | FBRequestConnectionErrorBehaviorAlertUser
         | FBRequestConnectionErrorBehaviorRetry;
 
+        [self convertParams:params];
         FBRequest *request = [FBRequest requestWithGraphPath:path
                                                   parameters:params
                                                   HTTPMethod:httpMethod];
