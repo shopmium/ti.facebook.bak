@@ -14,6 +14,7 @@
 
 BOOL temporarilySuspended = NO;
 BOOL skipMeCall = NO;
+NSTimeInterval meRequestTimeout = 180.0;
 
 @implementation FacebookModule
 #pragma mark Internal
@@ -117,32 +118,48 @@ BOOL skipMeCall = NO;
 - (void)populateUserDetails {
     TiThreadPerformOnMainThread(^{
         if (FBSession.activeSession.isOpen) {
-            FBRequestConnection *connection = [[FBRequestConnection alloc] init];
+            FBRequestConnection *connection = [[FBRequestConnection alloc] initWithTimeout:meRequestTimeout];
             connection.errorBehavior = FBRequestConnectionErrorBehaviorReconnectSession
-                | FBRequestConnectionErrorBehaviorAlertUser
-                | FBRequestConnectionErrorBehaviorRetry;
+            | FBRequestConnectionErrorBehaviorRetry;
 
             [connection addRequest:[FBRequest requestForMe]
-                completionHandler:^(FBRequestConnection *connection, NSDictionary<FBGraphUser> *user, NSError *error) {
-                    RELEASE_TO_NIL(uid);
-                    if (!error) {
-                        uid = [[user objectForKey:@"id"] copy];
-                        loggedIn = YES;
-                        [self fireLogin:user cancelled:NO withError:nil];
-                    } else {
-                        // Error on /me call
-                        // In a future rev perhaps use stored user info
-                        // But for now bail out
-                        NSLog(@"/me graph call error");
-                        TiThreadPerformOnMainThread(^{
-                            [FBSession.activeSession closeAndClearTokenInformation];
-                        }, YES);
-                        loggedIn = NO;
-                        // We set error to nil since any useful message was already surfaced
-                        [self fireLogin:nil cancelled:NO withError:nil];
-
-                    }
-            }];
+                 completionHandler:^(FBRequestConnection *connection, NSDictionary<FBGraphUser> *user, NSError *error) {
+                     RELEASE_TO_NIL(uid);
+                     if (!error) {
+                         uid = [[user objectForKey:@"id"] copy];
+                         [self fireLogin:user cancelled:NO withError:nil];
+                     } else {
+                         // Error on /me call
+                         // In a future rev perhaps use stored user info
+                         // But for now bail out
+                         switch(error.fberrorCategory) {
+                             case FBErrorCategoryAuthenticationReopenSession:
+                                 // will be handled by authentication error handling
+                                 NSLog(@"[ERROR] /me FBErrorCategoryAuthenticationReopenSession");
+                                 return;
+                                 break;
+                            case FBErrorCategoryFacebookOther:
+                                  NSLog(@"[ERROR] /me FBErrorCategoryFacebookOther");
+                                  return;
+                                  break;
+                             case FBErrorCategoryInvalid:
+                             case FBErrorCategoryServer:
+                             case FBErrorCategoryThrottling:
+                             case FBErrorCategoryBadRequest:
+                             case FBErrorCategoryPermissions:
+                             case FBErrorCategoryRetry:
+                             case FBErrorCategoryUserCancelled:
+                             default:
+                                 NSLog(@"[ERROR] /me error.description: ", error.description);
+                                 TiThreadPerformOnMainThread(^{
+                                     [FBSession.activeSession closeAndClearTokenInformation];
+                                 }, YES);
+                                 // We set error to nil since any useful message was already surfaced
+                                 [self fireLogin:nil cancelled:NO withError:error];
+                                 break;
+                         }
+                     }
+                 }];
             [connection start];
         }
     }, NO);
