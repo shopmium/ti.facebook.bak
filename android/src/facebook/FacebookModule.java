@@ -955,6 +955,16 @@ public class FacebookModule extends KrollModule implements TiActivityResultHandl
 		}
 	}
 
+	@Kroll.method
+	public void eventRegister() {
+		try {
+			AppEventsLogger logger = AppEventsLogger.newLogger(TiApplication.getInstance().getApplicationContext());
+			logger.logEvent(AppEventsConstants.EVENT_NAME_COMPLETED_REGISTRATION);
+		} catch (Throwable t) {
+			Log.e(TAG, "facebook catch event register error => "+t);
+		}
+	}
+
 	@Kroll.getProperty @Kroll.method
 	public boolean getPublishPermission()
 	{
