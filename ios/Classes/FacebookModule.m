@@ -1018,6 +1018,13 @@ NSTimeInterval meRequestTimeout = 180.0;
     }, NO);
 }
 
+-(void)eventRegister:(id)args {
+    TiThreadPerformOnMainThread(^{
+        [FBAppEvents logEvent:FBAppEventNameCompletedRegistration
+         parameters:nil];
+    }, NO);
+}
+
 #pragma mark Listener work
 
 -(void)fireLogin:(id)result cancelled:(BOOL)cancelled withError:(NSError *)error
